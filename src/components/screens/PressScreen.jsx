@@ -1,28 +1,25 @@
 import { useGameStore } from '@/hooks/useGameState';
-import { fmt, mmss, UPGRADE_DEFS, STAFF_DEFS, gUpgCost, gUpgVal, stkCost } from '@/constants/game';
+import { fmt, UPGRADE_DEFS, STAFF_DEFS, GRAPES_PER_BARREL, gUpgCost, gUpgVal, stkCost } from '@/constants/game';
 import { PressHouseBG } from '@/scenes';
 
 export default function PressScreen() {
   const {
-    money, grapes, grapeQueue, pressQueue, pressSecs,
-    cellarQueue, cellarSecs, wine,
+    money, grapes, barrels,
     upgrades, staff,
-    startPress, buyUpgrade, buyStaff,
+    pressGrapes, buyUpgrade, buyStaff,
   } = useGameStore(s => ({
-    money:        s.money,
-    grapes:       s.grapes,
-    grapeQueue:   s.grapeQueue,
-    pressQueue:   s.pressQueue,
-    pressSecs:    s.pressSecs,
-    cellarQueue:  s.cellarQueue,
-    cellarSecs:   s.cellarSecs,
-    wine:         s.wine,
-    upgrades:     s.upgrades,
-    staff:        s.staff,
-    startPress:   s.startPress,
-    buyUpgrade:   s.buyUpgrade,
-    buyStaff:     s.buyStaff,
+    money:       s.money,
+    grapes:      s.grapes,
+    barrels:     s.barrels,
+    upgrades:    s.upgrades,
+    staff:       s.staff,
+    pressGrapes: s.pressGrapes,
+    buyUpgrade:  s.buyUpgrade,
+    buyStaff:    s.buyStaff,
   }));
+
+  const grapeCost = Math.max(5, GRAPES_PER_BARREL - gUpgVal(upgrades, 'pressSpeed'));
+  const maxBatches = Math.floor(grapes / grapeCost);
 
   return (
     <div className="screen">
@@ -30,38 +27,50 @@ export default function PressScreen() {
       <div className="screen-content">
         <h2 className="screen-title">⚙️ Press House</h2>
 
-        {/* Pipeline status */}
+        {/* Resource bar */}
         <div className="pipeline">
           <div className="pipeline-step">
-            <div className="pipe-label">🍇 Queue</div>
-            <div className="pipe-value">{Math.floor(grapeQueue)}</div>
+            <div className="pipe-label">🍇 Grapes</div>
+            <div className="pipe-value">{Math.floor(grapes)}</div>
           </div>
           <div className="pipeline-arrow">→</div>
           <div className="pipeline-step">
-            <div className="pipe-label">⚙️ Press</div>
-            <div className="pipe-value">{pressQueue > 0 ? mmss(pressSecs) : '—'}</div>
+            <div className="pipe-label">Cost</div>
+            <div className="pipe-value">{grapeCost}/barrel</div>
           </div>
           <div className="pipeline-arrow">→</div>
           <div className="pipeline-step">
-            <div className="pipe-label">🪣 Cellar</div>
-            <div className="pipe-value">{cellarQueue > 0 ? mmss(cellarSecs) : '—'}</div>
-          </div>
-          <div className="pipeline-arrow">→</div>
-          <div className="pipeline-step">
-            <div className="pipe-label">🍷 Wine</div>
-            <div className="pipe-value">{Math.floor(wine)}</div>
+            <div className="pipe-label">🛢️ Barrels</div>
+            <div className="pipe-value">{Math.floor(barrels)}</div>
           </div>
         </div>
 
-        {/* Press button */}
-        <button
-          className={`action-btn ${grapeQueue < 10 ? 'disabled' : ''}`}
-          onClick={startPress}
-          disabled={grapeQueue < 10 || pressQueue > 0}
-        >
-          Press {Math.floor(grapeQueue)} grapes
-          {grapeQueue < 10 && <span className="btn-hint"> (need 10)</span>}
-        </button>
+        {/* Press buttons */}
+        <div className="press-btn-row">
+          {[1, 5, 10].map(n => (
+            <button
+              key={n}
+              className={`action-btn press-qty-btn ${maxBatches < n ? 'disabled' : ''}`}
+              onClick={() => pressGrapes(n)}
+              disabled={maxBatches < n}
+            >
+              Press {n}
+              <span className="btn-cost">({n * grapeCost} 🍇)</span>
+            </button>
+          ))}
+          <button
+            className={`action-btn press-qty-btn ${maxBatches < 1 ? 'disabled' : ''}`}
+            onClick={() => pressGrapes(maxBatches)}
+            disabled={maxBatches < 1}
+          >
+            Press All
+            <span className="btn-cost">({Math.floor(grapes)} 🍇)</span>
+          </button>
+        </div>
+
+        {maxBatches < 1 && (
+          <p className="press-hint">Need {grapeCost} grapes to press 1 barrel — go harvest!</p>
+        )}
 
         {/* Upgrades */}
         <h3 className="section-title">Upgrades</h3>
@@ -77,7 +86,7 @@ export default function PressScreen() {
                 <div className="upg-info">
                   <div className="upg-label">{def.label} <span className="upg-level">Lv{level}</span></div>
                   <div className="upg-desc">{def.desc}</div>
-                  <div className="upg-val">Current: {val.toFixed(1)}</div>
+                  <div className="upg-val">Value: {val.toFixed(1)}</div>
                 </div>
                 <button
                   className={`upg-btn ${can ? '' : 'disabled'}`}
@@ -95,10 +104,10 @@ export default function PressScreen() {
         <h3 className="section-title">Staff</h3>
         <div className="staff-grid">
           {Object.entries(STAFF_DEFS).map(([key, def]) => {
-            const level   = staff[key] || 0;
-            const maxed   = level >= def.maxLvl;
-            const cost    = maxed ? null : stkCost(key, level);
-            const can     = !maxed && money >= cost;
+            const level = staff[key] || 0;
+            const maxed = level >= def.maxLvl;
+            const cost  = maxed ? null : stkCost(key, level);
+            const can   = !maxed && money >= cost;
             return (
               <div key={key} className="staff-card">
                 <div className="staff-emoji">{def.emoji}</div>

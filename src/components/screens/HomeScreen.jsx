@@ -1,27 +1,22 @@
 import { useGameStore } from '@/hooks/useGameState';
-import { fmt, GRAPE_VARIETIES, SEASONS_DATA } from '@/constants/game';
+import { fmt, GRAPE_VARIETIES } from '@/constants/game';
 import { HomeBG } from '@/scenes';
 
 export default function HomeScreen() {
   const {
-    money, grapes, wine, fame, prestige,
-    activeVariety, unlockedVarieties, seasonIdx, seasonSecs,
-    harvestGrapes, setTab,
+    money, grapes, barrels, wine, fame, prestige,
+    activeVariety, setTab,
   } = useGameStore(s => ({
-    money:              s.money,
-    grapes:             s.grapes,
-    wine:               s.wine,
-    fame:               s.fame,
-    prestige:           s.prestige,
-    activeVariety:      s.activeVariety,
-    unlockedVarieties:  s.unlockedVarieties,
-    seasonIdx:          s.seasonIdx,
-    seasonSecs:         s.seasonSecs,
-    harvestGrapes:      s.harvestGrapes,
-    setTab:             s.setTab,
+    money:         s.money,
+    grapes:        s.grapes,
+    barrels:       s.barrels,
+    wine:          s.wine,
+    fame:          s.fame,
+    prestige:      s.prestige,
+    activeVariety: s.activeVariety,
+    setTab:        s.setTab,
   }));
 
-  const season = SEASONS_DATA[seasonIdx];
   const variety = GRAPE_VARIETIES.find(v => v.id === activeVariety);
 
   return (
@@ -29,30 +24,23 @@ export default function HomeScreen() {
       <HomeBG />
 
       <div className="screen-content">
-        {/* Season banner */}
-        <div className="season-banner">
-          {season.emoji} {season.label}
-          <span className="season-timer"> {Math.ceil(seasonSecs)}s</span>
-        </div>
-
-        {/* Prestige badge */}
         {prestige > 0 && (
           <div className="prestige-badge">✨ Prestige {prestige}</div>
         )}
 
-        {/* Main harvest button */}
-        <button className="harvest-btn" onClick={harvestGrapes}>
-          <span className="harvest-emoji">{variety.emoji}</span>
-          <span className="harvest-label">Harvest {variety.name}</span>
-        </button>
+        <div className="home-winery-label">
+          <span className="home-winery-emoji">{variety.emoji}</span>
+          <span className="home-winery-name">{variety.name} Winery</span>
+        </div>
 
-        {/* Resource cards */}
-        <div className="stat-row">
+        {/* Resource overview */}
+        <div className="stat-row stat-row-wide">
           {[
-            { emoji: '💰', label: 'Money',  value: `$${fmt(money)}`       },
-            { emoji: '🍇', label: 'Grapes', value: fmt(grapes)            },
-            { emoji: '🍷', label: 'Wine',   value: `${fmt(wine)} bottles` },
-            { emoji: '⭐', label: 'Fame',   value: Math.floor(fame)       },
+            { emoji: '💰', label: 'Money',   value: `$${fmt(money)}`    },
+            { emoji: '🍇', label: 'Grapes',  value: fmt(grapes)         },
+            { emoji: '🛢️', label: 'Barrels', value: fmt(barrels)        },
+            { emoji: '🍷', label: 'Wine',    value: `${fmt(wine)} btl`  },
+            { emoji: '⭐', label: 'Fame',    value: Math.floor(fame)    },
           ].map(({ emoji, label, value }) => (
             <div key={label} className="stat-card">
               <div className="stat-emoji">{emoji}</div>
@@ -65,10 +53,10 @@ export default function HomeScreen() {
         {/* Quick nav */}
         <div className="quick-nav">
           {[
-            ['⚙️',  'press',    'Press'],
-            ['💎',  'shop',     'Upgrades'],
-            ['🚢',  'export',   'Export'],
-            ['✨',  'prestige', 'Prestige'],
+            ['🍇', 'vineyard', 'Vineyard'],
+            ['🛢️', 'press',    'Press'],
+            ['🪣', 'cellar',   'Cellar'],
+            ['🚢', 'export',   'Export'],
           ].map(([emoji, id, label]) => (
             <button key={id} className="quick-btn" onClick={() => setTab(id)}>
               {emoji} {label}

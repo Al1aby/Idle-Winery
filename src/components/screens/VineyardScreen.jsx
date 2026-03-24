@@ -1,21 +1,27 @@
 import { useGameStore } from '@/hooks/useGameState';
-import { GRAPE_VARIETIES, fmt } from '@/constants/game';
+import { GRAPE_VARIETIES, VINE_COOLDOWN, fmt, gUpgVal } from '@/constants/game';
 import { VineyardBG } from '@/scenes';
 
 export default function VineyardScreen() {
-  const { money, unlockedVarieties, activeVariety } = useGameStore(s => ({
+  const { money, vines, unlockedVarieties, activeVariety, upgrades, harvestVine } = useGameStore(s => ({
     money:             s.money,
+    vines:             s.vines,
     unlockedVarieties: s.unlockedVarieties,
     activeVariety:     s.activeVariety,
+    upgrades:          s.upgrades,
+    harvestVine:       s.harvestVine,
   }));
 
-  const unlock = (variety) => {
+  const variety = GRAPE_VARIETIES.find(v => v.id === activeVariety) || GRAPE_VARIETIES[0];
+  const yieldPerHarvest = Math.round(gUpgVal(upgrades, 'vineYield') * variety.grapeValue * 10) / 10;
+
+  const unlock = (v) => {
     const { money } = useGameStore.getState();
-    if (money < variety.unlockCost) return;
+    if (money < v.unlockCost) return;
     useGameStore.setState(s => ({
-      money: s.money - variety.unlockCost,
-      unlockedVarieties: [...s.unlockedVarieties, variety.id],
-      activeVariety: variety.id,
+      money: s.money - v.unlockCost,
+      unlockedVarieties: [...s.unlockedVarieties, v.id],
+      activeVariety: v.id,
     }));
   };
 
@@ -24,13 +30,45 @@ export default function VineyardScreen() {
       <VineyardBG />
       <div className="screen-content">
         <h2 className="screen-title">🍇 Vineyard</h2>
-        <p className="screen-subtitle">Select your active grape variety</p>
 
+        {/* Vine rows */}
+        <div className="vine-rows">
+          {vines.map((vine, idx) => {
+            const ready    = vine.cooldown <= 0;
+            const progress = ready ? 1 : (VINE_COOLDOWN - vine.cooldown) / VINE_COOLDOWN;
+            return (
+              <div key={vine.id} className="vine-row-card">
+                <div className="vine-row-header">
+                  <span className="vine-row-title">{variety.emoji} Row {idx + 1}</span>
+                  {!ready && (
+                    <span className="vine-row-timer">{vine.cooldown.toFixed(1)}s</span>
+                  )}
+                </div>
+                <div className="vine-progress-bar">
+                  <div
+                    className={`vine-progress-fill ${ready ? 'ready' : ''}`}
+                    style={{ width: `${progress * 100}%` }}
+                  />
+                </div>
+                <button
+                  className={`vine-harvest-btn ${ready ? 'ready' : 'cooling'}`}
+                  onClick={() => harvestVine(vine.id)}
+                  disabled={!ready}
+                >
+                  {ready ? `🌾 Harvest (+${yieldPerHarvest} 🍇)` : `⏳ Growing…`}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Variety selector */}
+        <h3 className="section-title">Grape Variety</h3>
         <div className="variety-grid">
           {GRAPE_VARIETIES.filter(v => !v.prem).map(v => {
-            const owned    = unlockedVarieties.includes(v.id);
-            const active   = activeVariety === v.id;
-            const canBuy   = !owned && money >= v.unlockCost;
+            const owned  = unlockedVarieties.includes(v.id);
+            const active = activeVariety === v.id;
+            const canBuy = !owned && money >= v.unlockCost;
             return (
               <div
                 key={v.id}
@@ -44,7 +82,7 @@ export default function VineyardScreen() {
                 <div className="variety-name">{v.name}</div>
                 <div className="variety-stats">
                   <span>🍷 ×{v.wineMultiplier}</span>
-                  <span>⏱ {v.growTime}s</span>
+                  <span>🍇 ×{v.grapeValue}</span>
                 </div>
                 {!owned && (
                   <div className={`variety-cost ${canBuy ? 'affordable' : 'expensive'}`}>

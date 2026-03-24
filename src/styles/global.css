@@ -295,3 +295,49 @@ body{background:#1a0f0a;font-family:'Lato',sans-serif;}
 .modal-buttons { display: flex; gap: 8px; justify-content: center; }
 .btn-primary { padding: 9px 18px; border-radius: 10px; border: none; background: linear-gradient(135deg,#c8953a,#d4a84a); color: #1a0f0a; font-weight: 700; font-size: 0.78rem; cursor: pointer; }
 .btn-secondary { padding: 9px 18px; border-radius: 10px; border: 1.5px solid rgba(245,230,196,0.3); background: transparent; color: rgba(245,230,196,0.7); font-weight: 700; font-size: 0.78rem; cursor: pointer; }
+
+/* ── Vine rows (VineyardScreen) ── */
+.vine-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.vine-row-card { background: rgba(255,255,255,0.65); border-radius: 14px; padding: 11px 13px; border: 1.5px solid rgba(255,255,255,0.55); box-shadow: 0 2px 10px rgba(0,0,0,0.07); backdrop-filter: blur(6px); }
+.vine-row-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+.vine-row-title { font-weight: 700; font-size: 0.78rem; color: #1a0f0a; display: flex; align-items: center; gap: 6px; }
+.vine-row-timer { font-size: 0.72rem; font-family: monospace; color: #8b5e3c; font-weight: 700; }
+.vine-progress-bar { height: 8px; background: rgba(0,0,0,0.08); border-radius: 4px; margin-bottom: 8px; overflow: hidden; }
+.vine-progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg,#c8953a,#e8b85a); transition: width 0.3s; }
+.vine-progress-fill.ready { background: linear-gradient(90deg,#3a6b35,#6abf5e); }
+.vine-harvest-btn { width: 100%; padding: 8px; border-radius: 10px; border: none; font-weight: 700; font-size: 0.74rem; cursor: pointer; transition: transform 0.1s; }
+.vine-harvest-btn.ready { background: linear-gradient(135deg,#3a6b35,#5a9e53); color: #fff; }
+.vine-harvest-btn.ready:active { transform: scale(0.96); }
+.vine-harvest-btn.cooling { background: #e0d6cc; color: #aaa; cursor: not-allowed; }
+
+/* ── Press House buttons ── */
+.press-btn-row { display: grid; grid-template-columns: repeat(2,1fr); gap: 7px; margin-bottom: 12px; }
+.press-qty-btn { margin-bottom: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 9px 8px; font-size: 0.74rem; }
+.btn-cost { font-size: 0.58rem; opacity: 0.7; font-weight: 400; }
+.press-hint { font-size: 0.65rem; color: #888; text-align: center; font-style: italic; margin-bottom: 10px; background: rgba(255,255,255,0.4); padding: 6px 10px; border-radius: 9px; }
+
+/* ── Cellar resource row ── */
+.cellar-resource-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 14px; }
+.cellar-res-card { background: rgba(255,255,255,0.65); backdrop-filter: blur(6px); border-radius: 14px; padding: 14px 18px; text-align: center; border: 1.5px solid rgba(255,255,255,0.55); box-shadow: 0 2px 10px rgba(0,0,0,0.07); min-width: 90px; }
+.cellar-res-emoji { font-size: 2rem; margin-bottom: 4px; }
+.cellar-res-count { font-size: 1.4rem; font-weight: 700; color: #1a0f0a; font-family: 'Playfair Display', serif; }
+.cellar-res-label { font-size: 0.6rem; color: #888; }
+.cellar-arrow { font-size: 1.4rem; color: #c8953a; font-weight: 700; flex-shrink: 0; }
+
+/* ── Ferment buttons & progress ── */
+.ferm-btn-row { display: grid; grid-template-columns: repeat(2,1fr); gap: 7px; margin-bottom: 12px; }
+.ferm-qty-btn { margin-bottom: 0; padding: 9px 8px; font-size: 0.74rem; }
+.ferm-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+.ferm-progress-bar { height: 10px; background: rgba(255,255,255,0.15); border-radius: 5px; overflow: hidden; }
+.ferm-progress-fill { height: 100%; background: linear-gradient(90deg,#c8953a,#f0c060); border-radius: 5px; transition: width 0.3s; }
+
+/* ── Home screen winery label ── */
+.home-winery-label { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; background: rgba(255,255,255,0.6); backdrop-filter: blur(4px); border-radius: 14px; padding: 10px 14px; border: 1px solid rgba(255,255,255,0.6); }
+.home-winery-emoji { font-size: 1.8rem; }
+.home-winery-name { font-family: 'Playfair Display', serif; font-size: 1rem; color: #3a1a08; font-weight: 700; }
+
+/* ── 5-column stat row ── */
+.stat-row-wide { grid-template-columns: repeat(5, 1fr); }
+.stat-row-wide .stat-emoji { font-size: 0.9rem; }
+.stat-row-wide .stat-value { font-size: 0.62rem; }
+.stat-row-wide .stat-label { font-size: 0.48rem; }
