@@ -103,9 +103,11 @@ export function makeBG(drawFn) {
 //  Usage: <SpriteBG src="/assets/backgrounds/cellar.jpg" />
 // ─────────────────────────────────────────────────────────────────────────────
 export function SpriteBG({ src, style }) {
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '')
+  const fullSrc = src.startsWith('/') ? `${base}${src}` : src
   return (
     <img
-      src={src}
+      src={fullSrc}
       alt=""
       aria-hidden="true"
       style={{
