@@ -2,12 +2,11 @@ import { useGameStore } from '@/hooks/useGameState';
 import { PrestigeBG } from '@/scenes';
 
 export default function PrestigeScreen() {
-  const { fame, prestige, money, wine, prestige: doPrestige } = useGameStore(s => ({
+  const { fame, prestige, money, wine } = useGameStore(s => ({
     fame:     s.fame,
     prestige: s.prestige,
     money:    s.money,
     wine:     s.wine,
-    prestige: s.prestige,
   }));
 
   const doPrestigeAction = useGameStore(s => s.prestige);
