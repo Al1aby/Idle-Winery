@@ -1,4 +1,9 @@
-export {
-  HomeBG, VineyardBG, PressHouseBG, CellarBG,
-  ExportBG, LabBG, EventsBG, ShopBG, PrestigeBG
-} from './backgrounds.jsx'
+export { HomeBG } from './HomeBG.jsx'
+export { VineyardBG } from './VineyardBG.jsx'
+export { PressHouseBG } from './PressHouseBG.jsx'
+export { CellarBG } from './CellarBG.jsx'
+export { ExportBG } from './ExportBG.jsx'
+export { LabBG } from './LabBG.jsx'
+export { EventsBG } from './EventsBG.jsx'
+export { ShopBG } from './ShopBG.jsx'
+export { PrestigeBG } from './PrestigeBG.jsx'
