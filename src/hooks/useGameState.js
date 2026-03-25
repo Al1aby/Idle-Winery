@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import {
   GRAPE_VARIETIES, UPGRADE_DEFS, STAFF_DEFS, EXPORT_CITIES,
-  VINE_COOLDOWN, GRAPES_PER_BARREL, FERMENT_SECS,
+  VINE_COOLDOWN, GRAPES_PER_BARREL, FERMENT_SECS, PRESS_SECS,
+  VINE_ROW_COSTS, AD_WORKER_DURATION,
   EVENTS_LIST, DAILY_REWARDS, VISITOR_POOL,
   BLEND_NAMES, BLEND_BONUS, AD_DURATION,
   fmt, mmss, gUpgVal, gUpgCost, stkCost
@@ -11,6 +12,15 @@ import { SFX } from '../audio/sfx.js'
 export { fmt, mmss }
 
 const SAVE_KEY = 'vineyardIdle_v2'
+
+// ── Inventory helpers ─────────────────────────────────────────────────────────
+const mkInv = () => ({ grapes: 0, barrels: 0, wine: 0 })
+
+const inv2totals = inv => ({
+  grapes:  Object.values(inv).reduce((t, v) => t + (v.grapes  || 0), 0),
+  barrels: Object.values(inv).reduce((t, v) => t + (v.barrels || 0), 0),
+  wine:    Object.values(inv).reduce((t, v) => t + (v.wine    || 0), 0),
+})
 
 function initialState() {
   return {
@@ -24,26 +34,29 @@ function initialState() {
     unlockedVarieties: ['chardonnay'],
     upgrades: {},
     staff: {},
-    // vines: array of { id, cooldown } — cooldown in seconds remaining
     vines: Array.from({ length: 4 }, (_, i) => ({ id: i, cooldown: 0 })),
-    // fermentation in cellar
+    // per-variety inventory: { [varietyId]: { grapes, barrels, wine } }
+    inventory: { chardonnay: mkInv() },
+    // press cooldown (grapes are deducted immediately; barrels granted after timer)
+    pressQueue: 0,
+    pressSecs: 0,
+    pressVariety: null,
+    // fermentation
     fermentQueue: 0,
     fermentSecs: 0,
-    // export
+    fermentVariety: null,
+    // ad-powered automation timers (seconds remaining)
+    adWorkers: { harvester: 0, presser: 0, cellarMgr: 0 },
     exportActive: null,
-    // events
     activeEvent: null, eventSecs: 0, eventProgress: 0,
-    // daily / visitor
     lastDaily: null, dailyStreak: 0,
     visitor: null, visitorTimer: 0,
-    // ads / blend
     adTimer: 0, adActive: false,
     blendA: null, blendB: null, blendResult: null,
     iapOwned: [],
     notification: null,
     tab: 'home',
     tickCount: 0,
-    // derived (synced by gameTick)
     grapeQueue: 0,
   }
 }
@@ -52,7 +65,29 @@ function loadState() {
   try {
     const raw = localStorage.getItem(SAVE_KEY)
     if (!raw) return initialState()
-    return { ...initialState(), ...JSON.parse(raw) }
+    const loaded = JSON.parse(raw)
+    const state = { ...initialState(), ...loaded }
+
+    // Ensure inventory entry for every unlocked variety
+    if (!state.inventory) state.inventory = {}
+    for (const vid of state.unlockedVarieties) {
+      if (!state.inventory[vid]) state.inventory[vid] = mkInv()
+    }
+
+    // Migrate old saves that had flat grapes/barrels/wine but no per-variety inventory
+    if (!loaded.inventory && (loaded.grapes > 0 || loaded.barrels > 0 || loaded.wine > 0)) {
+      state.inventory.chardonnay = {
+        grapes:  loaded.grapes  || 0,
+        barrels: loaded.barrels || 0,
+        wine:    loaded.wine    || 0,
+      }
+    }
+
+    if (!state.adWorkers) state.adWorkers = { harvester: 0, presser: 0, cellarMgr: 0 }
+
+    // Sync totals
+    Object.assign(state, inv2totals(state.inventory))
+    return state
   } catch {
     return initialState()
   }
@@ -68,7 +103,7 @@ function saveState(state) {
 export const useGameStore = create((set, get) => ({
   ...loadState(),
 
-  // ── Vineyard ───────────────────────────────────────────────────────────────
+  // ── Vineyard ─────────────────────────────────────────────────────────────────
   harvestVine(id) {
     set(s => {
       const vine = s.vines.find(v => v.id === id)
@@ -76,71 +111,120 @@ export const useGameStore = create((set, get) => ({
       const variety = GRAPE_VARIETIES.find(g => g.id === s.activeVariety) || GRAPE_VARIETIES[0]
       const harvested = gUpgVal(s.upgrades, 'vineYield') * variety.grapeValue
       SFX.harvest()
-      const newGrapes = s.grapes + harvested
+      const inv = s.inventory[s.activeVariety] || mkInv()
+      const newInv = { ...s.inventory, [s.activeVariety]: { ...inv, grapes: inv.grapes + harvested } }
       const newVines = s.vines.map(v => v.id === id ? { ...v, cooldown: VINE_COOLDOWN } : v)
       const evProg = s.activeEvent?.type === 'harvest'
         ? (s.eventProgress || 0) + harvested : s.eventProgress
-      return { grapes: newGrapes, grapeQueue: newGrapes, vines: newVines, eventProgress: evProg }
+      return {
+        inventory: newInv, ...inv2totals(newInv),
+        grapeQueue: s.grapes + harvested, vines: newVines, eventProgress: evProg,
+      }
     })
   },
 
-  // ── Press House ────────────────────────────────────────────────────────────
+  buyVineRow() {
+    set(s => {
+      const extraRows = s.vines.length - 4
+      if (extraRows >= VINE_ROW_COSTS.length) return {}
+      const cost = VINE_ROW_COSTS[extraRows]
+      if (s.money < cost) return {}
+      return { money: s.money - cost, vines: [...s.vines, { id: s.vines.length, cooldown: 0 }] }
+    })
+  },
+
+  unlockVariety(varietyId) {
+    set(s => {
+      const variety = GRAPE_VARIETIES.find(v => v.id === varietyId)
+      if (!variety || s.unlockedVarieties.includes(varietyId)) return {}
+      if (variety.prem && !s.iapOwned.includes('seasonpass')) return {}
+      if (!variety.prem && s.money < variety.unlockCost) return {}
+      const newInv = { ...s.inventory, [varietyId]: s.inventory[varietyId] || mkInv() }
+      return {
+        money: variety.prem ? s.money : s.money - variety.unlockCost,
+        unlockedVarieties: [...s.unlockedVarieties, varietyId],
+        activeVariety: varietyId,
+        inventory: newInv,
+      }
+    })
+  },
+
+  // ── Press House ──────────────────────────────────────────────────────────────
   pressGrapes(batches) {
     set(s => {
+      if (s.pressQueue > 0) return {}  // already pressing
+      const inv = s.inventory[s.activeVariety] || mkInv()
       const grapeCost = Math.max(5, GRAPES_PER_BARREL - gUpgVal(s.upgrades, 'pressSpeed'))
-      const maxBatches = Math.floor(s.grapes / grapeCost)
+      const maxBatches = Math.floor(inv.grapes / grapeCost)
       const actual = Math.min(batches, maxBatches)
       if (actual <= 0) return {}
       SFX.press()
-      const newGrapes = s.grapes - actual * grapeCost
+      const pressSecs = Math.max(3, PRESS_SECS - gUpgVal(s.upgrades, 'pressSpeed') * 0.5)
+      const newInv = { ...s.inventory, [s.activeVariety]: { ...inv, grapes: inv.grapes - actual * grapeCost } }
       const evProg = s.activeEvent?.type === 'press'
         ? (s.eventProgress || 0) + actual : s.eventProgress
-      return { grapes: newGrapes, grapeQueue: newGrapes, barrels: s.barrels + actual, eventProgress: evProg }
+      return {
+        inventory: newInv, ...inv2totals(newInv),
+        pressQueue: actual, pressSecs, pressVariety: s.activeVariety, eventProgress: evProg,
+      }
     })
   },
 
-  // ── Cellar ─────────────────────────────────────────────────────────────────
+  // ── Cellar ───────────────────────────────────────────────────────────────────
   fermentBarrels(batches) {
     set(s => {
-      if (s.fermentQueue > 0) return {} // already fermenting
-      const actual = Math.min(batches, s.barrels)
+      if (s.fermentQueue > 0) return {}
+      const inv = s.inventory[s.activeVariety] || mkInv()
+      const actual = Math.min(batches, inv.barrels)
       if (actual <= 0) return {}
       SFX.bottle()
       const secs = Math.max(5, FERMENT_SECS - gUpgVal(s.upgrades, 'cellarSpeed'))
-      return { fermentQueue: actual, fermentSecs: secs, barrels: s.barrels - actual }
+      const newInv = { ...s.inventory, [s.activeVariety]: { ...inv, barrels: inv.barrels - actual } }
+      return {
+        inventory: newInv, ...inv2totals(newInv),
+        fermentQueue: actual, fermentSecs: secs, fermentVariety: s.activeVariety,
+      }
     })
   },
 
   sellWine(amount) {
     set(s => {
-      const qty = amount ?? s.wine
-      if (qty <= 0 || s.wine <= 0) return {}
-      const actual = Math.min(qty, s.wine)
+      const inv = s.inventory[s.activeVariety] || mkInv()
+      const qty = amount ?? inv.wine
+      if (qty <= 0 || inv.wine <= 0) return {}
+      const actual = Math.min(qty, inv.wine)
       const variety = GRAPE_VARIETIES.find(g => g.id === s.activeVariety) || GRAPE_VARIETIES[0]
       const sommelierMult = s.staff.sommelier
         ? STAFF_DEFS.sommelier.mults[(s.staff.sommelier - 1)] : 1
       const pricePerBottle = gUpgVal(s.upgrades, 'winePrice') * variety.wineMultiplier * sommelierMult
       const earned = Math.floor(actual * pricePerBottle)
       SFX.sell()
+      const newInv = { ...s.inventory, [s.activeVariety]: { ...inv, wine: inv.wine - actual } }
       const evProg = s.activeEvent?.type === 'sell'
         ? (s.eventProgress || 0) + actual : s.eventProgress
-      return { money: s.money + earned, wine: s.wine - actual, fame: s.fame + Math.floor(earned / 150), eventProgress: evProg }
+      return {
+        inventory: newInv, ...inv2totals(newInv),
+        money: s.money + earned, fame: s.fame + Math.floor(earned / 150), eventProgress: evProg,
+      }
     })
   },
 
-  // ── Export ─────────────────────────────────────────────────────────────────
+  // ── Export ───────────────────────────────────────────────────────────────────
   startExport(cityId) {
     set(s => {
       const city = EXPORT_CITIES.find(c => c.id === cityId)
       const reputation = Math.floor(s.fame / 20)
-      if (!city || s.wine < city.minWine || reputation < city.repReq || s.exportActive) return {}
+      if (!city || reputation < city.repReq || s.exportActive) return {}
+      const inv = s.inventory[s.activeVariety] || mkInv()
+      if (inv.wine < city.minWine) return {}
       const variety = GRAPE_VARIETIES.find(g => g.id === s.activeVariety) || GRAPE_VARIETIES[0]
-      const reward = Math.floor(s.wine * gUpgVal(s.upgrades, 'winePrice') * variety.wineMultiplier * city.mult)
-      return { exportActive: { cityId, secsLeft: city.baseSecs, reward }, wine: 0 }
+      const reward = Math.floor(inv.wine * gUpgVal(s.upgrades, 'winePrice') * variety.wineMultiplier * city.mult)
+      const newInv = { ...s.inventory, [s.activeVariety]: { ...inv, wine: 0 } }
+      return { inventory: newInv, ...inv2totals(newInv), exportActive: { cityId, secsLeft: city.baseSecs, reward } }
     })
   },
 
-  // ── Shop ───────────────────────────────────────────────────────────────────
+  // ── Shop ─────────────────────────────────────────────────────────────────────
   buyUpgrade(key) {
     set(s => {
       const cost = gUpgCost(s.upgrades, key)
@@ -160,7 +244,12 @@ export const useGameStore = create((set, get) => ({
     })
   },
 
-  // ── Blend Lab ──────────────────────────────────────────────────────────────
+  // ── Ad Workers ───────────────────────────────────────────────────────────────
+  watchAdWorker(key) {
+    set(s => ({ adWorkers: { ...s.adWorkers, [key]: AD_WORKER_DURATION } }))
+  },
+
+  // ── Blend Lab ────────────────────────────────────────────────────────────────
   setBlend(slot, value) {
     if (slot === 'A') set({ blendA: value || null })
     else set({ blendB: value || null })
@@ -174,11 +263,15 @@ export const useGameStore = create((set, get) => ({
       const bonus = BLEND_BONUS[key1] || BLEND_BONUS[key2] || 1.5
       const name = BLEND_NAMES[Math.floor(Math.random() * BLEND_NAMES.length)]
       const gained = Math.floor((s.wine - 2) * bonus + 2)
-      return { wine: gained, blendResult: { name, bonus } }
+      const newInv = Object.fromEntries(
+        Object.entries(s.inventory).map(([k, v]) => [k, { ...v, wine: 0 }])
+      )
+      newInv[s.activeVariety] = { ...(newInv[s.activeVariety] || mkInv()), wine: gained }
+      return { inventory: newInv, ...inv2totals(newInv), blendResult: { name, bonus } }
     })
   },
 
-  // ── Events / Daily ─────────────────────────────────────────────────────────
+  // ── Events / Daily ───────────────────────────────────────────────────────────
   claimEvent() {
     set(s => {
       if (!s.activeEvent || s.eventProgress < s.activeEvent.target) return {}
@@ -193,13 +286,16 @@ export const useGameStore = create((set, get) => ({
       const streak = (s.lastDaily === new Date(Date.now() - 86400000).toDateString())
         ? Math.min(s.dailyStreak + 1, 5) : 0
       const reward = DAILY_REWARDS[streak]
+      const inv = s.inventory[s.activeVariety] || mkInv()
+      const newInv = { ...s.inventory, [s.activeVariety]: {
+        ...inv,
+        grapes: inv.grapes + (reward.grapes || 0),
+        wine:   inv.wine   + (reward.wine   || 0),
+      }}
       return {
-        money:  s.money  + (reward.money  || 0),
-        grapes: s.grapes + (reward.grapes || 0),
-        wine:   s.wine   + (reward.wine   || 0),
-        fame:   s.fame   + (reward.fame   || 0),
-        lastDaily: today,
-        dailyStreak: streak,
+        inventory: newInv, ...inv2totals(newInv),
+        money: s.money + (reward.money || 0), fame: s.fame + (reward.fame || 0),
+        lastDaily: today, dailyStreak: streak,
       }
     })
   },
@@ -216,7 +312,7 @@ export const useGameStore = create((set, get) => ({
     })
   },
 
-  // ── Prestige ───────────────────────────────────────────────────────────────
+  // ── Prestige ─────────────────────────────────────────────────────────────────
   prestige() {
     set(s => {
       if (s.fame < 1000) return {}
@@ -225,7 +321,7 @@ export const useGameStore = create((set, get) => ({
     })
   },
 
-  // ── Misc ───────────────────────────────────────────────────────────────────
+  // ── Misc ─────────────────────────────────────────────────────────────────────
   setTab(t) { SFX.tab(); set({ tab: t }) },
 
   notify(msg) {
@@ -246,6 +342,7 @@ setInterval(() => saveState(useGameStore.getState()), 10000)
 function gameTick(s) {
   const dt = 0.25
   let ns = { ...s, tickCount: (s.tickCount || 0) + 1 }
+  const inv = { ...ns.inventory }  // mutable working copy
 
   // Vine cooldowns
   ns.vines = ns.vines.map(v =>
@@ -255,48 +352,76 @@ function gameTick(s) {
   // Prestige bonus multiplier (+10% per level)
   const prestigeBonus = 1 + (ns.prestigeLvl || 0) * 0.1
 
-  // Staff: harvester — auto-harvests ready vines
-  const hLvl = ns.staff.harvester || 0
-  if (hLvl > 0) {
-    const variety = GRAPE_VARIETIES.find(g => g.id === ns.activeVariety) || GRAPE_VARIETIES[0]
-    const yieldMult = gUpgVal(ns.upgrades, 'vineYield')
-    const rate = STAFF_DEFS.harvester.rates[hLvl - 1]  // grapes/second
-    ns.grapes += rate * dt * variety.grapeValue * yieldMult * prestigeBonus
-  }
+  const variety = GRAPE_VARIETIES.find(g => g.id === ns.activeVariety) || GRAPE_VARIETIES[0]
+  const yieldMult = gUpgVal(ns.upgrades, 'vineYield')
+  if (!inv[ns.activeVariety]) inv[ns.activeVariety] = mkInv()
 
-  // Staff: presser — auto-presses grapes into barrels
-  const pLvl = ns.staff.presser || 0
-  if (pLvl > 0) {
-    const grapeCost = Math.max(5, GRAPES_PER_BARREL - gUpgVal(ns.upgrades, 'pressSpeed'))
-    const pressRate = STAFF_DEFS.presser.mults[pLvl - 1] * dt  // barrels per tick
-    if (ns.grapes >= grapeCost && Math.random() < pressRate) {
-      ns.grapes -= grapeCost
-      ns.barrels += 1
+  // ── Staff harvester + ad harvester ──
+  const hLvl = ns.staff.harvester || 0
+  const adHarv = (ns.adWorkers?.harvester || 0) > 0
+  const effectiveHLvl = hLvl > 0 ? hLvl : adHarv ? 1 : 0
+  if (effectiveHLvl > 0) {
+    const rate = STAFF_DEFS.harvester.rates[effectiveHLvl - 1]
+    inv[ns.activeVariety] = {
+      ...inv[ns.activeVariety],
+      grapes: inv[ns.activeVariety].grapes + rate * dt * variety.grapeValue * yieldMult * prestigeBonus,
     }
   }
 
-  // Fermentation timer
+  // ── Press cooldown timer ──
+  if (ns.pressQueue > 0) {
+    ns.pressSecs -= dt
+    if (ns.pressSecs <= 0) {
+      const pv = ns.pressVariety || ns.activeVariety
+      if (!inv[pv]) inv[pv] = mkInv()
+      inv[pv] = { ...inv[pv], barrels: inv[pv].barrels + ns.pressQueue }
+      ns.pressQueue = 0; ns.pressSecs = 0; ns.pressVariety = null
+      SFX.press()
+    }
+  }
+
+  // ── Staff presser + ad presser (auto, bypass cooldown) ──
+  const pLvl = ns.staff.presser || 0
+  const adPress = (ns.adWorkers?.presser || 0) > 0
+  const effectivePLvl = pLvl > 0 ? pLvl : adPress ? 1 : 0
+  if (effectivePLvl > 0) {
+    const grapeCost = Math.max(5, GRAPES_PER_BARREL - gUpgVal(ns.upgrades, 'pressSpeed'))
+    const pressRate = STAFF_DEFS.presser.mults[effectivePLvl - 1] * dt
+    if (inv[ns.activeVariety].grapes >= grapeCost && Math.random() < pressRate) {
+      inv[ns.activeVariety] = {
+        ...inv[ns.activeVariety],
+        grapes:  inv[ns.activeVariety].grapes  - grapeCost,
+        barrels: inv[ns.activeVariety].barrels + 1,
+      }
+    }
+  }
+
+  // ── Fermentation timer ──
   if (ns.fermentQueue > 0) {
     ns.fermentSecs -= dt
     if (ns.fermentSecs <= 0) {
-      const variety = GRAPE_VARIETIES.find(g => g.id === ns.activeVariety) || GRAPE_VARIETIES[0]
-      ns.wine += ns.fermentQueue * variety.wineMultiplier
-      ns.fermentQueue = 0
-      ns.fermentSecs = 0
+      const fv = ns.fermentVariety || ns.activeVariety
+      const fVariety = GRAPE_VARIETIES.find(g => g.id === fv) || GRAPE_VARIETIES[0]
+      if (!inv[fv]) inv[fv] = mkInv()
+      inv[fv] = { ...inv[fv], wine: inv[fv].wine + ns.fermentQueue * fVariety.wineMultiplier }
+      ns.fermentQueue = 0; ns.fermentSecs = 0; ns.fermentVariety = null
       SFX.bottle()
     }
   }
 
-  // Staff: cellarMgr — auto-starts fermentation when idle
+  // ── Staff cellarMgr + ad cellarMgr ──
   const cLvl = ns.staff.cellarMgr || 0
-  if (cLvl > 0 && ns.barrels > 0 && ns.fermentQueue === 0) {
-    const batch = Math.min(STAFF_DEFS.cellarMgr.mults[cLvl - 1], ns.barrels)
-    ns.barrels -= batch
+  const adCellar = (ns.adWorkers?.cellarMgr || 0) > 0
+  const effectiveCLvl = cLvl > 0 ? cLvl : adCellar ? 1 : 0
+  if (effectiveCLvl > 0 && ns.fermentQueue === 0 && inv[ns.activeVariety].barrels > 0) {
+    const batch = Math.min(STAFF_DEFS.cellarMgr.mults[effectiveCLvl - 1], inv[ns.activeVariety].barrels)
+    inv[ns.activeVariety] = { ...inv[ns.activeVariety], barrels: inv[ns.activeVariety].barrels - batch }
     ns.fermentQueue = batch
     ns.fermentSecs = Math.max(5, FERMENT_SECS - gUpgVal(ns.upgrades, 'cellarSpeed'))
+    ns.fermentVariety = ns.activeVariety
   }
 
-  // Export timer
+  // ── Export timer ──
   if (ns.exportActive) {
     ns.exportActive = { ...ns.exportActive, secsLeft: ns.exportActive.secsLeft - dt }
     if (ns.exportActive.secsLeft <= 0) {
@@ -308,26 +433,40 @@ function gameTick(s) {
     }
   }
 
-  // Active event countdown
+  // ── Active event countdown ──
   if (ns.activeEvent) {
     ns.eventSecs -= dt
-    if (ns.eventSecs <= 0) ns.activeEvent = null
+    if (ns.eventSecs <= 0 && ns.eventProgress < ns.activeEvent.target) ns.activeEvent = null
   } else if (ns.tickCount % 480 === 1) {
     ns.activeEvent = EVENTS_LIST[Math.floor(Math.random() * EVENTS_LIST.length)]
     ns.eventSecs = ns.activeEvent.secs
     ns.eventProgress = 0
   }
 
-  // Visitor spawn
+  // ── Visitor spawn ──
   ns.visitorTimer -= dt
   if (ns.visitorTimer <= 0 && !ns.visitor) {
     ns.visitor = VISITOR_POOL[Math.floor(Math.random() * VISITOR_POOL.length)]
     ns.visitorTimer = 120 + Math.random() * 180
   }
 
+  // ── Ad workers countdown ──
+  if (ns.adWorkers) {
+    ns.adWorkers = {
+      harvester: Math.max(0, (ns.adWorkers.harvester || 0) - dt),
+      presser:   Math.max(0, (ns.adWorkers.presser   || 0) - dt),
+      cellarMgr: Math.max(0, (ns.adWorkers.cellarMgr || 0) - dt),
+    }
+  }
+
   if (ns.adActive) { ns.adTimer -= dt; if (ns.adTimer <= 0) ns.adActive = false }
 
-  // Keep derived fields in sync
+  // ── Commit inventory and sync totals ──
+  ns.inventory = inv
+  const totals = inv2totals(inv)
+  ns.grapes  = totals.grapes
+  ns.barrels = totals.barrels
+  ns.wine    = totals.wine
   ns.grapeQueue = ns.grapes
 
   return ns
