@@ -380,19 +380,29 @@ function gameTick(s) {
     }
   }
 
-  // ── Staff presser + ad presser (auto, bypass cooldown) ──
+  // ── Staff presser (instant, bypasses cooldown — paid feature) ──
   const pLvl = ns.staff.presser || 0
-  const adPress = (ns.adWorkers?.presser || 0) > 0
-  const effectivePLvl = pLvl > 0 ? pLvl : adPress ? 1 : 0
-  if (effectivePLvl > 0) {
+  if (pLvl > 0) {
     const grapeCost = Math.max(5, GRAPES_PER_BARREL - gUpgVal(ns.upgrades, 'pressSpeed'))
-    const pressRate = STAFF_DEFS.presser.mults[effectivePLvl - 1] * dt
+    const pressRate = STAFF_DEFS.presser.mults[pLvl - 1] * dt
     if (inv[ns.activeVariety].grapes >= grapeCost && Math.random() < pressRate) {
       inv[ns.activeVariety] = {
         ...inv[ns.activeVariety],
         grapes:  inv[ns.activeVariety].grapes  - grapeCost,
         barrels: inv[ns.activeVariety].barrels + 1,
       }
+    }
+  }
+
+  // ── Ad presser (triggers 1 batch through the press cooldown when idle) ──
+  const adPress = (ns.adWorkers?.presser || 0) > 0
+  if (adPress && ns.pressQueue === 0) {
+    const grapeCost = Math.max(5, GRAPES_PER_BARREL - gUpgVal(ns.upgrades, 'pressSpeed'))
+    if (inv[ns.activeVariety].grapes >= grapeCost) {
+      inv[ns.activeVariety] = { ...inv[ns.activeVariety], grapes: inv[ns.activeVariety].grapes - grapeCost }
+      ns.pressQueue = 1
+      ns.pressSecs = Math.max(3, PRESS_SECS - gUpgVal(ns.upgrades, 'pressSpeed') * 0.5)
+      ns.pressVariety = ns.activeVariety
     }
   }
 
