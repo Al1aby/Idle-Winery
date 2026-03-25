@@ -1,5 +1,5 @@
 import { useGameStore } from '@/hooks/useGameState';
-import { fmt, mmss, FERMENT_SECS, GRAPE_VARIETIES, STAFF_DEFS, gUpgVal } from '@/constants/game';
+import { fmt, mmss, FERMENT_SECS, TANK_SIZE, GRAPE_VARIETIES, STAFF_DEFS, gUpgVal } from '@/constants/game';
 import { CellarBG } from '@/scenes';
 import { UpgradeSection, StaffSection } from '@/components/ShopSections';
 
@@ -53,9 +53,9 @@ export default function CellarScreen() {
           </div>
           <div className="cellar-arrow">→</div>
           <div className="cellar-res-card">
-            <div className="cellar-res-emoji">🍷</div>
+            <div className="cellar-res-emoji">📦</div>
             <div className="cellar-res-count">{Math.floor(inv.wine)}</div>
-            <div className="cellar-res-label">Bottles</div>
+            <div className="cellar-res-label">Cases</div>
           </div>
         </div>
 
@@ -86,11 +86,12 @@ export default function CellarScreen() {
               </button>
             ))}
             <button
-              className={`action-btn ferm-qty-btn ${inv.barrels < 1 ? 'disabled' : ''}`}
-              onClick={() => fermentBarrels(inv.barrels)}
+              className={`action-btn ferm-qty-btn tank-btn ${inv.barrels < 1 ? 'disabled' : ''}`}
+              onClick={() => fermentBarrels(Math.min(inv.barrels, TANK_SIZE))}
               disabled={inv.barrels < 1}
             >
-              Ferment All
+              🛁 Fill Tank
+              <span className="btn-cost">({Math.min(Math.floor(inv.barrels), TANK_SIZE)}/{TANK_SIZE})</span>
             </button>
           </div>
         )}
@@ -115,10 +116,10 @@ export default function CellarScreen() {
         {/* Sell wine */}
         <h3 className="section-title">Sell Wine</h3>
         <div className="wine-stock">
-          <div className="stock-emoji">🍷</div>
+          <div className="stock-emoji">📦</div>
           <div className="stock-count">{Math.floor(inv.wine)}</div>
-          <div className="stock-label">bottles ready</div>
-          <div className="stock-price">${pricePerBottle}/bottle</div>
+          <div className="stock-label">cases ready</div>
+          <div className="stock-price">${pricePerBottle}/case</div>
         </div>
 
         <div className="sell-row">
@@ -152,7 +153,7 @@ export default function CellarScreen() {
                   <div key={vid} className={`inv-row ${vid === activeVariety ? 'active' : ''}`}>
                     <span className="inv-emoji">{v?.emoji}</span>
                     <span className="inv-name">{v?.name}</span>
-                    <span className="inv-count">{fmt(wine)} 🍷</span>
+                    <span className="inv-count">{fmt(wine)} 📦</span>
                   </div>
                 );
               })}

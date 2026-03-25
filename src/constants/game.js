@@ -8,6 +8,7 @@ export const FERMENT_SECS     = 30   // seconds to ferment a batch
 export const PRESS_SECS       = 10   // seconds to press a batch
 export const VINE_ROW_COSTS   = [1000, 3500, 9000, 22000, 60000]  // cost of each extra row
 export const AD_WORKER_DURATION = 300  // 5 minutes of ad-powered automation
+export const TANK_SIZE          = 20   // max barrels per ferment-tank fill
 
 export const GRAPE_VARIETIES = [
   { id:"chardonnay", name:"Chardonnay", emoji:"🍇", unlockCost:0,     grapeValue:1,  wineMultiplier:1,   prem:false, prestigeReq:0 },
@@ -23,7 +24,7 @@ export const UPGRADE_DEFS = {
   vineYield:  { label:"Vine Yield",     icon:"🍇", desc:"More grapes per harvest",      baseCost:50,  costMult:1.4, baseVal:1, valPerLevel:1   },
   pressSpeed: { label:"Press Efficiency",icon:"🛢️", desc:"Fewer grapes needed per barrel",baseCost:80,  costMult:1.5, baseVal:0, valPerLevel:2   },
   cellarSpeed:{ label:"Ferment Speed",  icon:"🪣", desc:"Faster barrel fermentation",   baseCost:120, costMult:1.6, baseVal:0, valPerLevel:5   },
-  winePrice:  { label:"Wine Quality",   icon:"💎", desc:"Higher per-bottle sale price", baseCost:200, costMult:1.7, baseVal:1, valPerLevel:0.4 },
+  winePrice:  { label:"Wine Quality",   icon:"💎", desc:"Higher per-case sale price",   baseCost:200, costMult:1.7, baseVal:1, valPerLevel:0.4 },
 }
 
 export const STAFF_DEFS = {
@@ -43,7 +44,7 @@ export const EXPORT_CITIES = [
 
 export const EVENTS_LIST = [
   { id:"e1", name:"Harvest Festival", desc:"Harvest 200 grapes",  type:"harvest", target:200, secs:360, reward:{money:60,  fame:4  } },
-  { id:"e2", name:"Red Wine Gala",    desc:"Sell 20 bottles",     type:"sell",    target:20,  secs:480, reward:{money:120, fame:6  } },
+  { id:"e2", name:"Red Wine Gala",    desc:"Sell 20 cases",       type:"sell",    target:20,  secs:480, reward:{money:120, fame:6  } },
   { id:"e3", name:"Press Blitz",      desc:"Press 10 barrels",    type:"press",   target:10,  secs:480, reward:{money:75,  fame:4  } },
   { id:"e4", name:"Export Rush",      desc:"Complete 2 exports",  type:"export",  target:2,   secs:900, reward:{money:250, fame:12 } },
 ]
@@ -58,10 +59,10 @@ export const DAILY_REWARDS = [
 ]
 
 export const VISITOR_POOL = [
-  { id:"critic",   name:"Wine Critic",    desc:"Taste 5 bottles for +1 reputation!", type:"rep",    costWine:5               },
+  { id:"critic",   name:"Wine Critic",    desc:"Taste 5 cases for +1 reputation!",   type:"rep",    costWine:5               },
   { id:"buyer",    name:"Bulk Buyer",     desc:"Buy all wine at 2x price!",           type:"sale3x", costWine:0, saleMult:2  },
-  { id:"tourist",  name:"Wine Tourist",   desc:"Give 3 bottles for a $60 tour fee.",  type:"cash",   costWine:3, cash:60     },
-  { id:"investor", name:"Angel Investor", desc:"Gift 4 bottles for $150 + 2 Fame.",   type:"invest", costWine:4, cash:150, fame:2 },
+  { id:"tourist",  name:"Wine Tourist",   desc:"Give 3 cases for a $60 tour fee.",    type:"cash",   costWine:3, cash:60     },
+  { id:"investor", name:"Angel Investor", desc:"Gift 4 cases for $150 + 2 Fame.",     type:"invest", costWine:4, cash:150, fame:2 },
 ]
 
 export const IAP_LIST = [

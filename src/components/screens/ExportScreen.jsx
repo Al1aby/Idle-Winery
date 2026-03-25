@@ -40,7 +40,7 @@ export default function ExportScreen() {
               <div key={city.id} className={`city-card ${locked ? 'locked' : ''}`}>
                 <div className="city-name">{city.name}</div>
                 <div className="city-stats">
-                  <span>🍷 Need {city.minWine}</span>
+                  <span>📦 Need {city.minWine} cs</span>
                   <span>💰 ×{city.mult}</span>
                   <span>⏱ {mmss(city.baseSecs)}</span>
                   {city.repReq > 0 && <span>⭐ Rep {city.repReq}</span>}

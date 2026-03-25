@@ -15,7 +15,7 @@ export default function HUD() {
       <div className="hud-stat"><span>💰</span><span>${fmt(money)}</span></div>
       <div className="hud-stat"><span>🍇</span><span>{fmt(grapes)}</span></div>
       <div className="hud-stat"><span>🛢️</span><span>{fmt(barrels)}</span></div>
-      <div className="hud-stat"><span>🍷</span><span>{fmt(wine)}</span></div>
+      <div className="hud-stat"><span>📦</span><span>{fmt(wine)}</span></div>
       <div className="hud-stat"><span>⭐</span><span>{Math.floor(fame)}</span></div>
     </header>
   );
