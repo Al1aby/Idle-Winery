@@ -10,13 +10,13 @@ export const VINE_ROW_COSTS   = [1000, 3500, 9000, 22000, 60000]  // cost of eac
 export const AD_WORKER_DURATION = 300  // 5 minutes of ad-powered automation
 
 export const GRAPE_VARIETIES = [
-  { id:"chardonnay", name:"Chardonnay", emoji:"🍇", unlockCost:0,     grapeValue:1,  wineMultiplier:1,   prem:false, prestigeReq:0 },
-  { id:"merlot",     name:"Merlot",     emoji:"🍷", unlockCost:1500,  grapeValue:2.5,wineMultiplier:2,   prem:false, prestigeReq:0 },
-  { id:"riesling",   name:"Riesling",   emoji:"🌿", unlockCost:7000,  grapeValue:5,  wineMultiplier:3.5, prem:false, prestigeReq:1 },
-  { id:"cabernet",   name:"Cabernet",   emoji:"🫐", unlockCost:28000, grapeValue:10, wineMultiplier:6,   prem:false, prestigeReq:2 },
-  { id:"champagne",  name:"Champagne",  emoji:"🥂", unlockCost:0,    grapeValue:18, wineMultiplier:12,  prem:true  },
-  { id:"icewine",    name:"Ice Wine",   emoji:"❄️",  unlockCost:0,    grapeValue:25, wineMultiplier:18,  prem:true  },
-  { id:"barolo",     name:"Barolo",     emoji:"🏆", unlockCost:0,    grapeValue:35, wineMultiplier:24,  prem:true  },
+  { id:"chardonnay", name:"Chardonnay", emoji:"🍇", unlockCost:0,     grapeValue:1,  wineMultiplier:2,   prem:false, prestigeReq:0 },
+  { id:"merlot",     name:"Merlot",     emoji:"🍷", unlockCost:1500,  grapeValue:2.5,wineMultiplier:4,   prem:false, prestigeReq:0 },
+  { id:"riesling",   name:"Riesling",   emoji:"🌿", unlockCost:7000,  grapeValue:5,  wineMultiplier:7,   prem:false, prestigeReq:1 },
+  { id:"cabernet",   name:"Cabernet",   emoji:"🫐", unlockCost:28000, grapeValue:10, wineMultiplier:12,  prem:false, prestigeReq:2 },
+  { id:"champagne",  name:"Champagne",  emoji:"🥂", unlockCost:0,    grapeValue:18, wineMultiplier:24,  prem:true  },
+  { id:"icewine",    name:"Ice Wine",   emoji:"❄️",  unlockCost:0,    grapeValue:25, wineMultiplier:36,  prem:true  },
+  { id:"barolo",     name:"Barolo",     emoji:"🏆", unlockCost:0,    grapeValue:35, wineMultiplier:48,  prem:true  },
 ]
 
 export const UPGRADE_DEFS = {
@@ -42,10 +42,10 @@ export const EXPORT_CITIES = [
 ]
 
 export const EVENTS_LIST = [
-  { id:"e1", name:"Harvest Festival", desc:"Harvest 200 grapes",  type:"harvest", target:200, secs:360, reward:{money:60,  fame:2 } },
-  { id:"e2", name:"Red Wine Gala",    desc:"Sell 20 bottles",     type:"sell",    target:20,  secs:480, reward:{money:120, fame:3 } },
-  { id:"e3", name:"Press Blitz",      desc:"Press 10 barrels",    type:"press",   target:10,  secs:480, reward:{money:75,  fame:2 } },
-  { id:"e4", name:"Export Rush",      desc:"Complete 2 exports",  type:"export",  target:2,   secs:900, reward:{money:250, fame:6 } },
+  { id:"e1", name:"Harvest Festival", desc:"Harvest 200 grapes",  type:"harvest", target:200, secs:360, reward:{money:60,  fame:4  } },
+  { id:"e2", name:"Red Wine Gala",    desc:"Sell 20 bottles",     type:"sell",    target:20,  secs:480, reward:{money:120, fame:6  } },
+  { id:"e3", name:"Press Blitz",      desc:"Press 10 barrels",    type:"press",   target:10,  secs:480, reward:{money:75,  fame:4  } },
+  { id:"e4", name:"Export Rush",      desc:"Complete 2 exports",  type:"export",  target:2,   secs:900, reward:{money:250, fame:12 } },
 ]
 
 export const DAILY_REWARDS = [
