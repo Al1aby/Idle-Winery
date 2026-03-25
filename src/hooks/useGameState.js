@@ -356,15 +356,25 @@ function gameTick(s) {
   const yieldMult = gUpgVal(ns.upgrades, 'vineYield')
   if (!inv[ns.activeVariety]) inv[ns.activeVariety] = mkInv()
 
-  // ── Staff harvester + ad harvester ──
+  // ── Staff harvester + ad harvester (auto-harvests ready vines via vine cooldown) ──
   const hLvl = ns.staff.harvester || 0
   const adHarv = (ns.adWorkers?.harvester || 0) > 0
-  const effectiveHLvl = hLvl > 0 ? hLvl : adHarv ? 1 : 0
-  if (effectiveHLvl > 0) {
-    const rate = STAFF_DEFS.harvester.rates[effectiveHLvl - 1]
-    inv[ns.activeVariety] = {
-      ...inv[ns.activeVariety],
-      grapes: inv[ns.activeVariety].grapes + rate * dt * variety.grapeValue * yieldMult * prestigeBonus,
+  if (hLvl > 0 || adHarv) {
+    const vineLimit = hLvl > 0 ? STAFF_DEFS.harvester.vines[hLvl - 1] : 2
+    let totalHarvested = 0
+    ns.vines = ns.vines.map((v, idx) => {
+      if (idx >= vineLimit || v.cooldown > 0) return v
+      totalHarvested += gUpgVal(ns.upgrades, 'vineYield') * variety.grapeValue * prestigeBonus
+      return { ...v, cooldown: VINE_COOLDOWN }
+    })
+    if (totalHarvested > 0) {
+      inv[ns.activeVariety] = {
+        ...inv[ns.activeVariety],
+        grapes: inv[ns.activeVariety].grapes + totalHarvested,
+      }
+      if (ns.activeEvent?.type === 'harvest') {
+        ns.eventProgress = (ns.eventProgress || 0) + totalHarvested
+      }
     }
   }
 
@@ -380,29 +390,20 @@ function gameTick(s) {
     }
   }
 
-  // ── Staff presser (instant, bypasses cooldown — paid feature) ──
+  // ── Staff presser + ad presser (both via press cooldown) ──
   const pLvl = ns.staff.presser || 0
-  if (pLvl > 0) {
-    const grapeCost = Math.max(5, GRAPES_PER_BARREL - gUpgVal(ns.upgrades, 'pressSpeed'))
-    const pressRate = STAFF_DEFS.presser.mults[pLvl - 1] * dt
-    if (inv[ns.activeVariety].grapes >= grapeCost && Math.random() < pressRate) {
-      inv[ns.activeVariety] = {
-        ...inv[ns.activeVariety],
-        grapes:  inv[ns.activeVariety].grapes  - grapeCost,
-        barrels: inv[ns.activeVariety].barrels + 1,
-      }
-    }
-  }
-
-  // ── Ad presser (triggers 1 batch through the press cooldown when idle) ──
   const adPress = (ns.adWorkers?.presser || 0) > 0
-  if (adPress && ns.pressQueue === 0) {
+  if ((pLvl > 0 || adPress) && ns.pressQueue === 0) {
     const grapeCost = Math.max(5, GRAPES_PER_BARREL - gUpgVal(ns.upgrades, 'pressSpeed'))
-    if (inv[ns.activeVariety].grapes >= grapeCost) {
-      inv[ns.activeVariety] = { ...inv[ns.activeVariety], grapes: inv[ns.activeVariety].grapes - grapeCost }
-      ns.pressQueue = 1
+    const batchCount = pLvl > 0 ? STAFF_DEFS.presser.batches[pLvl - 1] : 1
+    const maxBatches = Math.floor(inv[ns.activeVariety].grapes / grapeCost)
+    const actual = Math.min(batchCount, maxBatches)
+    if (actual > 0) {
+      inv[ns.activeVariety] = { ...inv[ns.activeVariety], grapes: inv[ns.activeVariety].grapes - actual * grapeCost }
+      ns.pressQueue = actual
       ns.pressSecs = Math.max(3, PRESS_SECS - gUpgVal(ns.upgrades, 'pressSpeed') * 0.5)
       ns.pressVariety = ns.activeVariety
+      if (ns.activeEvent?.type === 'press') ns.eventProgress = (ns.eventProgress || 0) + actual
     }
   }
 
@@ -419,12 +420,12 @@ function gameTick(s) {
     }
   }
 
-  // ── Staff cellarMgr + ad cellarMgr ──
+  // ── Staff cellarMgr + ad cellarMgr (via ferment cooldown) ──
   const cLvl = ns.staff.cellarMgr || 0
   const adCellar = (ns.adWorkers?.cellarMgr || 0) > 0
-  const effectiveCLvl = cLvl > 0 ? cLvl : adCellar ? 1 : 0
-  if (effectiveCLvl > 0 && ns.fermentQueue === 0 && inv[ns.activeVariety].barrels > 0) {
-    const batch = Math.min(STAFF_DEFS.cellarMgr.mults[effectiveCLvl - 1], inv[ns.activeVariety].barrels)
+  if ((cLvl > 0 || adCellar) && ns.fermentQueue === 0 && inv[ns.activeVariety].barrels > 0) {
+    const batchSize = cLvl > 0 ? STAFF_DEFS.cellarMgr.mults[cLvl - 1] : 1
+    const batch = Math.min(batchSize, inv[ns.activeVariety].barrels)
     inv[ns.activeVariety] = { ...inv[ns.activeVariety], barrels: inv[ns.activeVariety].barrels - batch }
     ns.fermentQueue = batch
     ns.fermentSecs = Math.max(5, FERMENT_SECS - gUpgVal(ns.upgrades, 'cellarSpeed'))
