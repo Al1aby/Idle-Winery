@@ -308,7 +308,43 @@ export const useGameStore = create((set, get) => ({
     set(s => {
       if (!s.visitor) return {}
       const v = s.visitor
-      return { visitor: null, money: s.money + (v.cash || 0), fame: s.fame + (v.fame || 0) }
+      const inv = { ...s.inventory }
+      const activeInv = inv[s.activeVariety] || mkInv()
+
+      // deduct wine cost if required
+      if (v.costWine > 0) {
+        if (activeInv.wine < v.costWine) return {}  // not enough wine, block
+        inv[s.activeVariety] = { ...activeInv, wine: activeInv.wine - v.costWine }
+      }
+
+      if (v.type === 'sale3x') {
+        // sell all wine across all varieties at saleMult price
+        const mult = v.saleMult || 2
+        let earned = 0
+        const sommelierMult = s.staff.sommelier ? STAFF_DEFS.sommelier.mults[(s.staff.sommelier - 1)] : 1
+        for (const [vid, vinv] of Object.entries(inv)) {
+          if (!vinv.wine) continue
+          const variety = GRAPE_VARIETIES.find(g => g.id === vid) || GRAPE_VARIETIES[0]
+          const price = gUpgVal(s.upgrades, 'winePrice') * variety.wineMultiplier * sommelierMult * mult
+          earned += Math.floor(vinv.wine * price)
+          inv[vid] = { ...vinv, wine: 0 }
+        }
+        SFX.sell()
+        return { visitor: null, inventory: inv, ...inv2totals(inv), money: s.money + earned }
+      }
+
+      if (v.type === 'rep') {
+        // +1 reputation = +20 fame, costs wine (already deducted above)
+        return { visitor: null, inventory: inv, ...inv2totals(inv), fame: s.fame + 20 }
+      }
+
+      // cash / invest types
+      return {
+        visitor: null,
+        inventory: inv, ...inv2totals(inv),
+        money: s.money + (v.cash || 0),
+        fame: s.fame + (v.fame || 0),
+      }
     })
   },
 
@@ -356,15 +392,25 @@ function gameTick(s) {
   const yieldMult = gUpgVal(ns.upgrades, 'vineYield')
   if (!inv[ns.activeVariety]) inv[ns.activeVariety] = mkInv()
 
-  // ── Staff harvester + ad harvester ──
+  // ── Staff harvester + ad harvester (auto-harvests ready vines via vine cooldown) ──
   const hLvl = ns.staff.harvester || 0
   const adHarv = (ns.adWorkers?.harvester || 0) > 0
-  const effectiveHLvl = hLvl > 0 ? hLvl : adHarv ? 1 : 0
-  if (effectiveHLvl > 0) {
-    const rate = STAFF_DEFS.harvester.rates[effectiveHLvl - 1]
-    inv[ns.activeVariety] = {
-      ...inv[ns.activeVariety],
-      grapes: inv[ns.activeVariety].grapes + rate * dt * variety.grapeValue * yieldMult * prestigeBonus,
+  if (hLvl > 0 || adHarv) {
+    const vineLimit = hLvl > 0 ? STAFF_DEFS.harvester.vines[hLvl - 1] : ns.vines.length
+    let totalHarvested = 0
+    ns.vines = ns.vines.map((v, idx) => {
+      if (idx >= vineLimit || v.cooldown > 0) return v
+      totalHarvested += gUpgVal(ns.upgrades, 'vineYield') * variety.grapeValue * prestigeBonus
+      return { ...v, cooldown: VINE_COOLDOWN }
+    })
+    if (totalHarvested > 0) {
+      inv[ns.activeVariety] = {
+        ...inv[ns.activeVariety],
+        grapes: inv[ns.activeVariety].grapes + totalHarvested,
+      }
+      if (ns.activeEvent?.type === 'harvest') {
+        ns.eventProgress = (ns.eventProgress || 0) + totalHarvested
+      }
     }
   }
 
@@ -380,19 +426,20 @@ function gameTick(s) {
     }
   }
 
-  // ── Staff presser + ad presser (auto, bypass cooldown) ──
+  // ── Staff presser + ad presser (both via press cooldown) ──
   const pLvl = ns.staff.presser || 0
   const adPress = (ns.adWorkers?.presser || 0) > 0
-  const effectivePLvl = pLvl > 0 ? pLvl : adPress ? 1 : 0
-  if (effectivePLvl > 0) {
+  if ((pLvl > 0 || adPress) && ns.pressQueue === 0) {
     const grapeCost = Math.max(5, GRAPES_PER_BARREL - gUpgVal(ns.upgrades, 'pressSpeed'))
-    const pressRate = STAFF_DEFS.presser.mults[effectivePLvl - 1] * dt
-    if (inv[ns.activeVariety].grapes >= grapeCost && Math.random() < pressRate) {
-      inv[ns.activeVariety] = {
-        ...inv[ns.activeVariety],
-        grapes:  inv[ns.activeVariety].grapes  - grapeCost,
-        barrels: inv[ns.activeVariety].barrels + 1,
-      }
+    const batchCount = pLvl > 0 ? STAFF_DEFS.presser.batches[pLvl - 1] : maxBatches
+    const maxBatches = Math.floor(inv[ns.activeVariety].grapes / grapeCost)
+    const actual = Math.min(batchCount, maxBatches)
+    if (actual > 0) {
+      inv[ns.activeVariety] = { ...inv[ns.activeVariety], grapes: inv[ns.activeVariety].grapes - actual * grapeCost }
+      ns.pressQueue = actual
+      ns.pressSecs = Math.max(3, PRESS_SECS - gUpgVal(ns.upgrades, 'pressSpeed') * 0.5)
+      ns.pressVariety = ns.activeVariety
+      if (ns.activeEvent?.type === 'press') ns.eventProgress = (ns.eventProgress || 0) + actual
     }
   }
 
@@ -409,12 +456,12 @@ function gameTick(s) {
     }
   }
 
-  // ── Staff cellarMgr + ad cellarMgr ──
+  // ── Staff cellarMgr + ad cellarMgr (via ferment cooldown) ──
   const cLvl = ns.staff.cellarMgr || 0
   const adCellar = (ns.adWorkers?.cellarMgr || 0) > 0
-  const effectiveCLvl = cLvl > 0 ? cLvl : adCellar ? 1 : 0
-  if (effectiveCLvl > 0 && ns.fermentQueue === 0 && inv[ns.activeVariety].barrels > 0) {
-    const batch = Math.min(STAFF_DEFS.cellarMgr.mults[effectiveCLvl - 1], inv[ns.activeVariety].barrels)
+  if ((cLvl > 0 || adCellar) && ns.fermentQueue === 0 && inv[ns.activeVariety].barrels > 0) {
+    const batchSize = cLvl > 0 ? STAFF_DEFS.cellarMgr.mults[cLvl - 1] : inv[ns.activeVariety].barrels
+    const batch = Math.min(batchSize, inv[ns.activeVariety].barrels)
     inv[ns.activeVariety] = { ...inv[ns.activeVariety], barrels: inv[ns.activeVariety].barrels - batch }
     ns.fermentQueue = batch
     ns.fermentSecs = Math.max(5, FERMENT_SECS - gUpgVal(ns.upgrades, 'cellarSpeed'))
@@ -447,7 +494,7 @@ function gameTick(s) {
   ns.visitorTimer -= dt
   if (ns.visitorTimer <= 0 && !ns.visitor) {
     ns.visitor = VISITOR_POOL[Math.floor(Math.random() * VISITOR_POOL.length)]
-    ns.visitorTimer = 120 + Math.random() * 180
+    ns.visitorTimer = 300 + Math.random() * 300
   }
 
   // ── Ad workers countdown ──
