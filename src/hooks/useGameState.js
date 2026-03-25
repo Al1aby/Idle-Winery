@@ -301,7 +301,10 @@ export const useGameStore = create((set, get) => ({
   },
 
   watchAd() {
-    set(s => ({ money: s.money * 2, adActive: true, adTimer: AD_DURATION }))
+    set(s => {
+      if (s.adActive) return {}
+      return { money: s.money * 2, adActive: true, adTimer: AD_DURATION }
+    })
   },
 
   acceptVisitor() {
@@ -431,8 +434,8 @@ function gameTick(s) {
   const adPress = (ns.adWorkers?.presser || 0) > 0
   if ((pLvl > 0 || adPress) && ns.pressQueue === 0) {
     const grapeCost = Math.max(5, GRAPES_PER_BARREL - gUpgVal(ns.upgrades, 'pressSpeed'))
-    const batchCount = pLvl > 0 ? STAFF_DEFS.presser.batches[pLvl - 1] : maxBatches
     const maxBatches = Math.floor(inv[ns.activeVariety].grapes / grapeCost)
+    const batchCount = pLvl > 0 ? STAFF_DEFS.presser.batches[pLvl - 1] : maxBatches
     const actual = Math.min(batchCount, maxBatches)
     if (actual > 0) {
       inv[ns.activeVariety] = { ...inv[ns.activeVariety], grapes: inv[ns.activeVariety].grapes - actual * grapeCost }
