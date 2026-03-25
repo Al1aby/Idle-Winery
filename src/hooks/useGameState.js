@@ -308,7 +308,43 @@ export const useGameStore = create((set, get) => ({
     set(s => {
       if (!s.visitor) return {}
       const v = s.visitor
-      return { visitor: null, money: s.money + (v.cash || 0), fame: s.fame + (v.fame || 0) }
+      const inv = { ...s.inventory }
+      const activeInv = inv[s.activeVariety] || mkInv()
+
+      // deduct wine cost if required
+      if (v.costWine > 0) {
+        if (activeInv.wine < v.costWine) return {}  // not enough wine, block
+        inv[s.activeVariety] = { ...activeInv, wine: activeInv.wine - v.costWine }
+      }
+
+      if (v.type === 'sale3x') {
+        // sell all wine across all varieties at saleMult price
+        const mult = v.saleMult || 2
+        let earned = 0
+        const sommelierMult = s.staff.sommelier ? STAFF_DEFS.sommelier.mults[(s.staff.sommelier - 1)] : 1
+        for (const [vid, vinv] of Object.entries(inv)) {
+          if (!vinv.wine) continue
+          const variety = GRAPE_VARIETIES.find(g => g.id === vid) || GRAPE_VARIETIES[0]
+          const price = gUpgVal(s.upgrades, 'winePrice') * variety.wineMultiplier * sommelierMult * mult
+          earned += Math.floor(vinv.wine * price)
+          inv[vid] = { ...vinv, wine: 0 }
+        }
+        SFX.sell()
+        return { visitor: null, inventory: inv, ...inv2totals(inv), money: s.money + earned }
+      }
+
+      if (v.type === 'rep') {
+        // +1 reputation = +20 fame, costs wine (already deducted above)
+        return { visitor: null, inventory: inv, ...inv2totals(inv), fame: s.fame + 20 }
+      }
+
+      // cash / invest types
+      return {
+        visitor: null,
+        inventory: inv, ...inv2totals(inv),
+        money: s.money + (v.cash || 0),
+        fame: s.fame + (v.fame || 0),
+      }
     })
   },
 
@@ -458,7 +494,7 @@ function gameTick(s) {
   ns.visitorTimer -= dt
   if (ns.visitorTimer <= 0 && !ns.visitor) {
     ns.visitor = VISITOR_POOL[Math.floor(Math.random() * VISITOR_POOL.length)]
-    ns.visitorTimer = 120 + Math.random() * 180
+    ns.visitorTimer = 300 + Math.random() * 300
   }
 
   // ── Ad workers countdown ──

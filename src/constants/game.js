@@ -6,14 +6,14 @@ export const VINE_COOLDOWN    = 15   // seconds per harvest
 export const GRAPES_PER_BARREL = 15  // grapes needed to press 1 barrel
 export const FERMENT_SECS     = 30   // seconds to ferment a batch
 export const PRESS_SECS       = 10   // seconds to press a batch
-export const VINE_ROW_COSTS   = [500, 1500, 4000, 10000, 25000]  // cost of each extra row
+export const VINE_ROW_COSTS   = [1000, 3500, 9000, 22000, 60000]  // cost of each extra row
 export const AD_WORKER_DURATION = 300  // 5 minutes of ad-powered automation
 
 export const GRAPE_VARIETIES = [
-  { id:"chardonnay", name:"Chardonnay", emoji:"🍇", unlockCost:0,    grapeValue:1,  wineMultiplier:1,   prem:false },
-  { id:"merlot",     name:"Merlot",     emoji:"🍷", unlockCost:500,  grapeValue:2.5,wineMultiplier:2,   prem:false },
-  { id:"riesling",   name:"Riesling",   emoji:"🌿", unlockCost:2000, grapeValue:5,  wineMultiplier:3.5, prem:false },
-  { id:"cabernet",   name:"Cabernet",   emoji:"🫐", unlockCost:8000, grapeValue:10, wineMultiplier:6,   prem:false },
+  { id:"chardonnay", name:"Chardonnay", emoji:"🍇", unlockCost:0,     grapeValue:1,  wineMultiplier:1,   prem:false },
+  { id:"merlot",     name:"Merlot",     emoji:"🍷", unlockCost:1500,  grapeValue:2.5,wineMultiplier:2,   prem:false },
+  { id:"riesling",   name:"Riesling",   emoji:"🌿", unlockCost:7000,  grapeValue:5,  wineMultiplier:3.5, prem:false },
+  { id:"cabernet",   name:"Cabernet",   emoji:"🫐", unlockCost:28000, grapeValue:10, wineMultiplier:6,   prem:false },
   { id:"champagne",  name:"Champagne",  emoji:"🥂", unlockCost:0,    grapeValue:18, wineMultiplier:12,  prem:true  },
   { id:"icewine",    name:"Ice Wine",   emoji:"❄️",  unlockCost:0,    grapeValue:25, wineMultiplier:18,  prem:true  },
   { id:"barolo",     name:"Barolo",     emoji:"🏆", unlockCost:0,    grapeValue:35, wineMultiplier:24,  prem:true  },
@@ -58,10 +58,10 @@ export const DAILY_REWARDS = [
 ]
 
 export const VISITOR_POOL = [
-  { id:"critic",   name:"Wine Critic",    desc:"Taste 5 bottles for +1 reputation!", type:"rep",    costWine:5              },
-  { id:"buyer",    name:"Bulk Buyer",     desc:"Buy all wine at 3x price!",           type:"sale3x", costWine:0              },
-  { id:"tourist",  name:"Wine Tourist",   desc:"Pay $200 for a tour.",                type:"cash",   costWine:0, cash:200    },
-  { id:"investor", name:"Angel Investor", desc:"Invest $500 + 3 Fame.",               type:"invest", costWine:0, cash:500, fame:3 },
+  { id:"critic",   name:"Wine Critic",    desc:"Taste 5 bottles for +1 reputation!", type:"rep",    costWine:5               },
+  { id:"buyer",    name:"Bulk Buyer",     desc:"Buy all wine at 2x price!",           type:"sale3x", costWine:0, saleMult:2  },
+  { id:"tourist",  name:"Wine Tourist",   desc:"Give 3 bottles for a $60 tour fee.",  type:"cash",   costWine:3, cash:60     },
+  { id:"investor", name:"Angel Investor", desc:"Gift 4 bottles for $150 + 2 Fame.",   type:"invest", costWine:4, cash:150, fame:2 },
 ]
 
 export const IAP_LIST = [
