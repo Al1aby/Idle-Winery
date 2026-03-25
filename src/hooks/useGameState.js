@@ -19,7 +19,7 @@ function initialState() {
     barrels: 0,
     wine: 0,
     fame: 0,
-    prestige: 0,
+    prestigeLvl: 0,
     activeVariety: 'chardonnay',
     unlockedVarieties: ['chardonnay'],
     upgrades: {},
@@ -78,7 +78,9 @@ export const useGameStore = create((set, get) => ({
       SFX.harvest()
       const newGrapes = s.grapes + harvested
       const newVines = s.vines.map(v => v.id === id ? { ...v, cooldown: VINE_COOLDOWN } : v)
-      return { grapes: newGrapes, grapeQueue: newGrapes, vines: newVines }
+      const evProg = s.activeEvent?.type === 'harvest'
+        ? (s.eventProgress || 0) + harvested : s.eventProgress
+      return { grapes: newGrapes, grapeQueue: newGrapes, vines: newVines, eventProgress: evProg }
     })
   },
 
@@ -91,7 +93,9 @@ export const useGameStore = create((set, get) => ({
       if (actual <= 0) return {}
       SFX.press()
       const newGrapes = s.grapes - actual * grapeCost
-      return { grapes: newGrapes, grapeQueue: newGrapes, barrels: s.barrels + actual }
+      const evProg = s.activeEvent?.type === 'press'
+        ? (s.eventProgress || 0) + actual : s.eventProgress
+      return { grapes: newGrapes, grapeQueue: newGrapes, barrels: s.barrels + actual, eventProgress: evProg }
     })
   },
 
@@ -118,7 +122,9 @@ export const useGameStore = create((set, get) => ({
       const pricePerBottle = gUpgVal(s.upgrades, 'winePrice') * variety.wineMultiplier * sommelierMult
       const earned = Math.floor(actual * pricePerBottle)
       SFX.sell()
-      return { money: s.money + earned, wine: s.wine - actual, fame: s.fame + Math.floor(earned / 150) }
+      const evProg = s.activeEvent?.type === 'sell'
+        ? (s.eventProgress || 0) + actual : s.eventProgress
+      return { money: s.money + earned, wine: s.wine - actual, fame: s.fame + Math.floor(earned / 150), eventProgress: evProg }
     })
   },
 
@@ -215,7 +221,7 @@ export const useGameStore = create((set, get) => ({
     set(s => {
       if (s.fame < 1000) return {}
       SFX.prestige()
-      return { ...initialState(), prestige: s.prestige + 1, money: 200 + s.prestige * 50 }
+      return { ...initialState(), prestigeLvl: s.prestigeLvl + 1, money: 200 + s.prestigeLvl * 50 }
     })
   },
 
@@ -246,13 +252,16 @@ function gameTick(s) {
     v.cooldown > 0 ? { ...v, cooldown: Math.max(0, v.cooldown - dt) } : v
   )
 
+  // Prestige bonus multiplier (+10% per level)
+  const prestigeBonus = 1 + (ns.prestigeLvl || 0) * 0.1
+
   // Staff: harvester — auto-harvests ready vines
   const hLvl = ns.staff.harvester || 0
   if (hLvl > 0) {
     const variety = GRAPE_VARIETIES.find(g => g.id === ns.activeVariety) || GRAPE_VARIETIES[0]
     const yieldMult = gUpgVal(ns.upgrades, 'vineYield')
     const rate = STAFF_DEFS.harvester.rates[hLvl - 1]  // grapes/second
-    ns.grapes += rate * dt * variety.grapeValue * yieldMult
+    ns.grapes += rate * dt * variety.grapeValue * yieldMult * prestigeBonus
   }
 
   // Staff: presser — auto-presses grapes into barrels
@@ -293,6 +302,7 @@ function gameTick(s) {
     if (ns.exportActive.secsLeft <= 0) {
       ns.money += ns.exportActive.reward
       ns.fame  += Math.floor(ns.exportActive.reward / 100)
+      if (ns.activeEvent?.type === 'export') ns.eventProgress = (ns.eventProgress || 0) + 1
       ns.exportActive = null
       SFX.sell()
     }
