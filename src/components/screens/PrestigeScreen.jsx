@@ -2,15 +2,15 @@ import { useGameStore } from '@/hooks/useGameState';
 import { PrestigeBG } from '@/scenes';
 
 export default function PrestigeScreen() {
-  const { fame, prestige, money, wine } = useGameStore(s => ({
-    fame:     s.fame,
-    prestige: s.prestige,
-    money:    s.money,
-    wine:     s.wine,
+  const { fame, prestigeLvl, money, wine } = useGameStore(s => ({
+    fame:        s.fame,
+    prestigeLvl: s.prestigeLvl,
+    money:       s.money,
+    wine:        s.wine,
   }));
 
-  const doPrestigeAction = useGameStore(s => s.prestige);
-  const fameNeeded = 100;
+  const doPrestige = useGameStore(s => s.prestige);  // action function
+  const fameNeeded = 1000;
   const canPrestige = fame >= fameNeeded;
 
   return (
@@ -20,9 +20,9 @@ export default function PrestigeScreen() {
         <h2 className="screen-title">✨ Prestige</h2>
 
         <div className="prestige-info">
-          <div className="prestige-count">Prestige Level: <strong>{prestige}</strong></div>
+          <div className="prestige-count">Prestige Level: <strong>{prestigeLvl}</strong></div>
           <div className="prestige-bonus">
-            {prestige > 0 && `+${prestige * 10}% all production`}
+            {prestigeLvl > 0 && `+${prestigeLvl * 10}% all production`}
           </div>
         </div>
 
@@ -39,7 +39,7 @@ export default function PrestigeScreen() {
         <div className="prestige-warning">
           <h3>⚠️ This will reset:</h3>
           <ul>
-            <li>Money, Grapes, Wine</li>
+            <li>Money, Grapes, Barrels, Wine</li>
             <li>Upgrades &amp; Staff</li>
             <li>Export progress</li>
           </ul>
@@ -53,7 +53,7 @@ export default function PrestigeScreen() {
 
         <button
           className={`prestige-btn ${canPrestige ? '' : 'disabled'}`}
-          onClick={doPrestigeAction}
+          onClick={doPrestige}
           disabled={!canPrestige}
         >
           {canPrestige ? '✨ Prestige Now' : `Need ${fameNeeded - Math.floor(fame)} more Fame`}

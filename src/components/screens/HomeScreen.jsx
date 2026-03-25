@@ -4,7 +4,7 @@ import { HomeBG } from '@/scenes';
 
 export default function HomeScreen() {
   const {
-    money, grapes, barrels, wine, fame, prestige,
+    money, grapes, barrels, wine, fame, prestigeLvl,
     activeVariety, setTab,
   } = useGameStore(s => ({
     money:         s.money,
@@ -12,7 +12,7 @@ export default function HomeScreen() {
     barrels:       s.barrels,
     wine:          s.wine,
     fame:          s.fame,
-    prestige:      s.prestige,
+    prestigeLvl:   s.prestigeLvl,
     activeVariety: s.activeVariety,
     setTab:        s.setTab,
   }));
@@ -24,8 +24,8 @@ export default function HomeScreen() {
       <HomeBG />
 
       <div className="screen-content">
-        {prestige > 0 && (
-          <div className="prestige-badge">✨ Prestige {prestige}</div>
+        {prestigeLvl > 0 && (
+          <div className="prestige-badge">✨ Prestige {prestigeLvl}</div>
         )}
 
         <div className="home-winery-label">

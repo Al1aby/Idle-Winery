@@ -3,15 +3,18 @@ import { EVENTS_LIST, fmt, mmss } from '@/constants/game';
 import { EventsBG } from '@/scenes';
 
 export default function EventsScreen() {
-  const { activeEvent, eventProgress, eventSecs } = useGameStore(s => ({
+  const { activeEvent, eventProgress, eventSecs, claimEvent } = useGameStore(s => ({
     activeEvent:   s.activeEvent,
     eventProgress: s.eventProgress,
     eventSecs:     s.eventSecs,
+    claimEvent:    s.claimEvent,
   }));
 
   const startEvent = (ev) => {
     useGameStore.setState({ activeEvent: ev, eventProgress: 0, eventSecs: ev.secs });
   };
+
+  const completed = activeEvent && eventProgress >= activeEvent.target;
 
   return (
     <div className="screen">
@@ -31,10 +34,17 @@ export default function EventsScreen() {
             <div className="event-progress-label">
               {Math.floor(eventProgress)} / {activeEvent.target}
             </div>
-            <div className="event-timer">⏱ {mmss(eventSecs)}</div>
+            {!completed && (
+              <div className="event-timer">⏱ {mmss(eventSecs)}</div>
+            )}
             <div className="event-reward">
               Reward: ${fmt(activeEvent.reward.money)} + {activeEvent.reward.fame} ⭐
             </div>
+            {completed && (
+              <button className="event-btn event-claim-btn" onClick={claimEvent}>
+                🎉 Claim Reward
+              </button>
+            )}
           </div>
         )}
 

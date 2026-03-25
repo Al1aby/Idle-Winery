@@ -256,6 +256,7 @@ body{background:#1a0f0a;font-family:'Lato',sans-serif;}
 .event-card-desc { font-size: 0.65rem; color: #888; margin-bottom: 7px; }
 .event-card-meta { display: flex; gap: 10px; font-size: 0.62rem; color: #666; margin-bottom: 8px; flex-wrap: wrap; }
 .event-btn { width: 100%; padding: 8px; border-radius: 10px; border: none; background: linear-gradient(135deg,#3a1a6b,#5a2a9e); color: #fff; font-weight: 700; font-size: 0.7rem; cursor: pointer; }
+.event-claim-btn { margin-top: 10px; background: linear-gradient(135deg,#c8953a,#e8b85a); color: #1a0f0a; font-size: 0.82rem; padding: 11px; }
 .event-active { background: linear-gradient(135deg,#1a1a3a,#2a2a5a); border-radius: 14px; padding: 14px; color: #fff; margin-bottom: 12px; }
 .event-name { font-family: 'Playfair Display', serif; font-size: 0.9rem; color: #c8953a; margin-bottom: 8px; }
 .event-progress-bar { height: 10px; background: rgba(255,255,255,0.15); border-radius: 5px; overflow: hidden; margin-bottom: 5px; }
