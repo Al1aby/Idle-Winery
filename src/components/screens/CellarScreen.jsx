@@ -1,5 +1,5 @@
 import { useGameStore } from '@/hooks/useGameState';
-import { fmt, mmss, FERMENT_SECS, GRAPE_VARIETIES, gUpgVal } from '@/constants/game';
+import { fmt, mmss, FERMENT_SECS, GRAPE_VARIETIES, STAFF_DEFS, gUpgVal } from '@/constants/game';
 import { CellarBG } from '@/scenes';
 import { UpgradeSection, StaffSection } from '@/components/ShopSections';
 
@@ -28,9 +28,12 @@ export default function CellarScreen() {
     buyStaff:          s.buyStaff,
   }));
 
-  const inv           = inventory[activeVariety] || { grapes: 0, barrels: 0, wine: 0 };
-  const fermentTime   = Math.max(5, FERMENT_SECS - gUpgVal(upgrades, 'cellarSpeed'));
-  const fermenting    = fermentQueue > 0;
+  const inv             = inventory[activeVariety] || { grapes: 0, barrels: 0, wine: 0 };
+  const fermentTime     = Math.max(5, FERMENT_SECS - gUpgVal(upgrades, 'cellarSpeed'));
+  const fermenting      = fermentQueue > 0;
+  const variety         = GRAPE_VARIETIES.find(g => g.id === activeVariety) || GRAPE_VARIETIES[0];
+  const sommelierMult   = staff.sommelier ? STAFF_DEFS.sommelier.mults[(staff.sommelier - 1)] : 1;
+  const pricePerBottle  = (gUpgVal(upgrades, 'winePrice') * variety.wineMultiplier * sommelierMult).toFixed(2);
   const fermentPct    = fermenting ? (1 - fermentSecs / fermentTime) * 100 : 0;
   const cellarAdTimer = adWorkers?.cellarMgr || 0;
   const fvVariety     = fermentVariety ? GRAPE_VARIETIES.find(g => g.id === fermentVariety) : null;
@@ -115,6 +118,7 @@ export default function CellarScreen() {
           <div className="stock-emoji">🍷</div>
           <div className="stock-count">{Math.floor(inv.wine)}</div>
           <div className="stock-label">bottles ready</div>
+          <div className="stock-price">${pricePerBottle}/bottle</div>
         </div>
 
         <div className="sell-row">

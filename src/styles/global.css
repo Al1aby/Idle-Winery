@@ -225,6 +225,7 @@ body{font-family:'Lato',sans-serif;}
 .stock-emoji { font-size: 3rem; }
 .stock-count { font-size: 2rem; font-weight: 700; color: #8b1a3a; font-family: 'Playfair Display', serif; }
 .stock-label { font-size: 0.7rem; color: #888; }
+.stock-price { font-size: 0.72rem; font-weight: 700; color: #c8953a; margin-top: 2px; }
 .sell-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
 .sell-btn { padding: 10px 16px; border-radius: 12px; border: none; background: linear-gradient(135deg,#8b1a3a,#b02e4e); color: #fff; font-weight: 700; font-size: 0.78rem; cursor: pointer; }
 .sell-btn.disabled { opacity: 0.35; cursor: not-allowed; background: #ccc; color: #666; }
@@ -243,6 +244,7 @@ body{font-family:'Lato',sans-serif;}
 .variety-cost.affordable { color: #3a6b35; }
 .variety-cost.expensive { color: #8b1a3a; }
 .variety-active-badge { margin-top: 5px; font-size: 0.58rem; font-weight: 700; color: #3a6b35; }
+.variety-price-hint { font-size: 0.58rem; color: #c8953a; font-weight: 700; margin-top: 3px; }
 .season-pass-note { font-size: 0.62rem; color: #888; text-align: center; font-style: italic; padding: 8px; background: rgba(255,255,255,0.4); border-radius: 10px; }
 .blend-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .blend-slot { flex: 1; background: rgba(255,255,255,0.65); border-radius: 12px; padding: 10px; text-align: center; border: 1.5px solid rgba(255,255,255,0.55); }

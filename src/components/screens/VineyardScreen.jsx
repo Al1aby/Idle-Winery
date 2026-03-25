@@ -134,9 +134,10 @@ export default function VineyardScreen() {
                 <div className="variety-emoji">{v.emoji}</div>
                 <div className="variety-name">{v.name}</div>
                 <div className="variety-stats">
-                  <span>🍷 ×{v.wineMultiplier}</span>
-                  <span>🍇 ×{v.grapeValue}</span>
+                  <span title="Bottles per barrel">🍷 ×{v.wineMultiplier}</span>
+                  <span title="Grape yield multiplier">🍇 ×{v.grapeValue}</span>
                 </div>
+                <div className="variety-price-hint">${v.wineMultiplier}/bottle base</div>
                 {!owned && prestigeLock && (
                   <div className="variety-cost expensive">✨ Prestige {v.prestigeReq}</div>
                 )}

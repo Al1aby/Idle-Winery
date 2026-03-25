@@ -10,13 +10,13 @@ export const VINE_ROW_COSTS   = [1000, 3500, 9000, 22000, 60000]  // cost of eac
 export const AD_WORKER_DURATION = 300  // 5 minutes of ad-powered automation
 
 export const GRAPE_VARIETIES = [
-  { id:"chardonnay", name:"Chardonnay", emoji:"🍇", unlockCost:0,     grapeValue:1,  wineMultiplier:2,   prem:false, prestigeReq:0 },
-  { id:"merlot",     name:"Merlot",     emoji:"🍷", unlockCost:1500,  grapeValue:2.5,wineMultiplier:4,   prem:false, prestigeReq:0 },
-  { id:"riesling",   name:"Riesling",   emoji:"🌿", unlockCost:7000,  grapeValue:5,  wineMultiplier:7,   prem:false, prestigeReq:1 },
-  { id:"cabernet",   name:"Cabernet",   emoji:"🫐", unlockCost:28000, grapeValue:10, wineMultiplier:12,  prem:false, prestigeReq:2 },
-  { id:"champagne",  name:"Champagne",  emoji:"🥂", unlockCost:0,    grapeValue:18, wineMultiplier:24,  prem:true  },
-  { id:"icewine",    name:"Ice Wine",   emoji:"❄️",  unlockCost:0,    grapeValue:25, wineMultiplier:36,  prem:true  },
-  { id:"barolo",     name:"Barolo",     emoji:"🏆", unlockCost:0,    grapeValue:35, wineMultiplier:48,  prem:true  },
+  { id:"chardonnay", name:"Chardonnay", emoji:"🍇", unlockCost:0,     grapeValue:1,  wineMultiplier:1,   prem:false, prestigeReq:0 },
+  { id:"merlot",     name:"Merlot",     emoji:"🍷", unlockCost:1500,  grapeValue:2.5,wineMultiplier:2,   prem:false, prestigeReq:0 },
+  { id:"riesling",   name:"Riesling",   emoji:"🌿", unlockCost:7000,  grapeValue:5,  wineMultiplier:3.5, prem:false, prestigeReq:1 },
+  { id:"cabernet",   name:"Cabernet",   emoji:"🫐", unlockCost:28000, grapeValue:10, wineMultiplier:6,   prem:false, prestigeReq:2 },
+  { id:"champagne",  name:"Champagne",  emoji:"🥂", unlockCost:0,    grapeValue:18, wineMultiplier:12,  prem:true  },
+  { id:"icewine",    name:"Ice Wine",   emoji:"❄️",  unlockCost:0,    grapeValue:25, wineMultiplier:18,  prem:true  },
+  { id:"barolo",     name:"Barolo",     emoji:"🏆", unlockCost:0,    grapeValue:35, wineMultiplier:24,  prem:true  },
 ]
 
 export const UPGRADE_DEFS = {
