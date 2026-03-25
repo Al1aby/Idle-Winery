@@ -39,7 +39,7 @@ export default function HomeScreen() {
             { emoji: '💰', label: 'Money',   value: `$${fmt(money)}`    },
             { emoji: '🍇', label: 'Grapes',  value: fmt(grapes)         },
             { emoji: '🛢️', label: 'Barrels', value: fmt(barrels)        },
-            { emoji: '🍷', label: 'Wine',    value: `${fmt(wine)} btl`  },
+            { emoji: '📦', label: 'Wine',     value: `${fmt(wine)} cs`   },
             { emoji: '⭐', label: 'Fame',    value: Math.floor(fame)    },
           ].map(({ emoji, label, value }) => (
             <div key={label} className="stat-card">

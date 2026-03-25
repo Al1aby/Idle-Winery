@@ -1,24 +1,29 @@
 import { useGameStore } from '@/hooks/useGameState';
 import { GRAPE_VARIETIES, VINE_COOLDOWN, VINE_ROW_COSTS, fmt, gUpgVal, mmss } from '@/constants/game';
 import { VineyardBG } from '@/scenes';
+import { UpgradeSection, StaffSection } from '@/components/ShopSections';
 
 export default function VineyardScreen() {
   const {
-    money, vines, unlockedVarieties, activeVariety, upgrades,
+    money, vines, unlockedVarieties, activeVariety, upgrades, staff, prestigeLvl,
     inventory, adWorkers,
-    harvestVine, buyVineRow, unlockVariety, watchAdWorker,
+    harvestVine, buyVineRow, unlockVariety, watchAdWorker, buyUpgrade, buyStaff,
   } = useGameStore(s => ({
     money:             s.money,
     vines:             s.vines,
     unlockedVarieties: s.unlockedVarieties,
     activeVariety:     s.activeVariety,
     upgrades:          s.upgrades,
+    staff:             s.staff,
+    prestigeLvl:       s.prestigeLvl,
     inventory:         s.inventory,
     adWorkers:         s.adWorkers,
     harvestVine:       s.harvestVine,
     buyVineRow:        s.buyVineRow,
     unlockVariety:     s.unlockVariety,
     watchAdWorker:     s.watchAdWorker,
+    buyUpgrade:        s.buyUpgrade,
+    buyStaff:          s.buyStaff,
   }));
 
   const variety = GRAPE_VARIETIES.find(v => v.id === activeVariety) || GRAPE_VARIETIES[0];
@@ -113,9 +118,10 @@ export default function VineyardScreen() {
         <h3 className="section-title">Grape Variety</h3>
         <div className="variety-grid">
           {GRAPE_VARIETIES.filter(v => !v.prem).map(v => {
-            const owned  = unlockedVarieties.includes(v.id);
-            const active = activeVariety === v.id;
-            const canBuy = !owned && money >= v.unlockCost;
+            const owned        = unlockedVarieties.includes(v.id);
+            const active       = activeVariety === v.id;
+            const prestigeLock = (v.prestigeReq || 0) > (prestigeLvl || 0);
+            const canBuy       = !owned && !prestigeLock && money >= v.unlockCost;
             return (
               <div
                 key={v.id}
@@ -128,10 +134,14 @@ export default function VineyardScreen() {
                 <div className="variety-emoji">{v.emoji}</div>
                 <div className="variety-name">{v.name}</div>
                 <div className="variety-stats">
-                  <span>🍷 ×{v.wineMultiplier}</span>
-                  <span>🍇 ×{v.grapeValue}</span>
+                  <span title="Cases per barrel">📦 ×{v.wineMultiplier}</span>
+                  <span title="Grape yield multiplier">🍇 ×{v.grapeValue}</span>
                 </div>
-                {!owned && (
+                <div className="variety-price-hint">${v.wineMultiplier}/case base</div>
+                {!owned && prestigeLock && (
+                  <div className="variety-cost expensive">✨ Prestige {v.prestigeReq}</div>
+                )}
+                {!owned && !prestigeLock && (
                   <div className={`variety-cost ${canBuy ? 'affordable' : 'expensive'}`}>
                     ${fmt(v.unlockCost)}
                   </div>
@@ -145,6 +155,9 @@ export default function VineyardScreen() {
         <div className="season-pass-note">
           🔒 Premium varieties (Champagne, Ice Wine, Barolo) unlock with Season Pass
         </div>
+
+        <UpgradeSection keys={['vineYield']} upgrades={upgrades} money={money} buyUpgrade={buyUpgrade} />
+        <StaffSection keys={['harvester']} staff={staff} money={money} prestigeLvl={prestigeLvl} buyStaff={buyStaff} />
       </div>
     </div>
   );

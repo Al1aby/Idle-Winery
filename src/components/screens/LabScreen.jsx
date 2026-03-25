@@ -68,7 +68,7 @@ export default function LabScreen() {
           onClick={createBlend}
           disabled={!blendA || !blendB || wine < 2}
         >
-          Create Blend (costs 2 🍷)
+          Create Blend (costs 2 📦)
         </button>
 
         {blendResult && (

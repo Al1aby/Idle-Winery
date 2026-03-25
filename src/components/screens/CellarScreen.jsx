@@ -1,14 +1,19 @@
 import { useGameStore } from '@/hooks/useGameState';
-import { fmt, mmss, FERMENT_SECS, GRAPE_VARIETIES, gUpgVal } from '@/constants/game';
+import { fmt, mmss, FERMENT_SECS, TANK_SIZE, GRAPE_VARIETIES, STAFF_DEFS, gUpgVal } from '@/constants/game';
 import { CellarBG } from '@/scenes';
+import { UpgradeSection, StaffSection } from '@/components/ShopSections';
 
 export default function CellarScreen() {
   const {
-    upgrades, inventory, activeVariety, unlockedVarieties,
+    money, upgrades, staff, prestigeLvl,
+    inventory, activeVariety, unlockedVarieties,
     fermentQueue, fermentSecs, fermentVariety, adWorkers,
-    fermentBarrels, sellWine, watchAdWorker,
+    fermentBarrels, sellWine, watchAdWorker, buyUpgrade, buyStaff,
   } = useGameStore(s => ({
+    money:             s.money,
     upgrades:          s.upgrades,
+    staff:             s.staff,
+    prestigeLvl:       s.prestigeLvl,
     inventory:         s.inventory,
     activeVariety:     s.activeVariety,
     unlockedVarieties: s.unlockedVarieties,
@@ -19,11 +24,16 @@ export default function CellarScreen() {
     fermentBarrels:    s.fermentBarrels,
     sellWine:          s.sellWine,
     watchAdWorker:     s.watchAdWorker,
+    buyUpgrade:        s.buyUpgrade,
+    buyStaff:          s.buyStaff,
   }));
 
-  const inv           = inventory[activeVariety] || { grapes: 0, barrels: 0, wine: 0 };
-  const fermentTime   = Math.max(5, FERMENT_SECS - gUpgVal(upgrades, 'cellarSpeed'));
-  const fermenting    = fermentQueue > 0;
+  const inv             = inventory[activeVariety] || { grapes: 0, barrels: 0, wine: 0 };
+  const fermentTime     = Math.max(5, FERMENT_SECS - gUpgVal(upgrades, 'cellarSpeed'));
+  const fermenting      = fermentQueue > 0;
+  const variety         = GRAPE_VARIETIES.find(g => g.id === activeVariety) || GRAPE_VARIETIES[0];
+  const sommelierMult   = staff.sommelier ? STAFF_DEFS.sommelier.mults[(staff.sommelier - 1)] : 1;
+  const pricePerBottle  = (gUpgVal(upgrades, 'winePrice') * variety.wineMultiplier * sommelierMult).toFixed(2);
   const fermentPct    = fermenting ? (1 - fermentSecs / fermentTime) * 100 : 0;
   const cellarAdTimer = adWorkers?.cellarMgr || 0;
   const fvVariety     = fermentVariety ? GRAPE_VARIETIES.find(g => g.id === fermentVariety) : null;
@@ -43,9 +53,9 @@ export default function CellarScreen() {
           </div>
           <div className="cellar-arrow">→</div>
           <div className="cellar-res-card">
-            <div className="cellar-res-emoji">🍷</div>
+            <div className="cellar-res-emoji">📦</div>
             <div className="cellar-res-count">{Math.floor(inv.wine)}</div>
-            <div className="cellar-res-label">Bottles</div>
+            <div className="cellar-res-label">Cases</div>
           </div>
         </div>
 
@@ -76,11 +86,12 @@ export default function CellarScreen() {
               </button>
             ))}
             <button
-              className={`action-btn ferm-qty-btn ${inv.barrels < 1 ? 'disabled' : ''}`}
-              onClick={() => fermentBarrels(inv.barrels)}
+              className={`action-btn ferm-qty-btn tank-btn ${inv.barrels < 1 ? 'disabled' : ''}`}
+              onClick={() => fermentBarrels(Math.min(inv.barrels, TANK_SIZE))}
               disabled={inv.barrels < 1}
             >
-              Ferment All
+              🛁 Fill Tank
+              <span className="btn-cost">({Math.min(Math.floor(inv.barrels), TANK_SIZE)}/{TANK_SIZE})</span>
             </button>
           </div>
         )}
@@ -105,9 +116,10 @@ export default function CellarScreen() {
         {/* Sell wine */}
         <h3 className="section-title">Sell Wine</h3>
         <div className="wine-stock">
-          <div className="stock-emoji">🍷</div>
+          <div className="stock-emoji">📦</div>
           <div className="stock-count">{Math.floor(inv.wine)}</div>
-          <div className="stock-label">bottles ready</div>
+          <div className="stock-label">cases ready</div>
+          <div className="stock-price">${pricePerBottle}/case</div>
         </div>
 
         <div className="sell-row">
@@ -126,6 +138,9 @@ export default function CellarScreen() {
           })}
         </div>
 
+        <UpgradeSection keys={['cellarSpeed', 'winePrice']} upgrades={upgrades} money={money} buyUpgrade={buyUpgrade} />
+        <StaffSection keys={['cellarMgr', 'sommelier']} staff={staff} money={money} prestigeLvl={prestigeLvl} buyStaff={buyStaff} />
+
         {/* Per-variety wine inventory */}
         {unlockedVarieties.length > 1 && (
           <>
@@ -138,7 +153,7 @@ export default function CellarScreen() {
                   <div key={vid} className={`inv-row ${vid === activeVariety ? 'active' : ''}`}>
                     <span className="inv-emoji">{v?.emoji}</span>
                     <span className="inv-name">{v?.name}</span>
-                    <span className="inv-count">{fmt(wine)} 🍷</span>
+                    <span className="inv-count">{fmt(wine)} 📦</span>
                   </div>
                 );
               })}

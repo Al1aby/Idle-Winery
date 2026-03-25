@@ -1,7 +1,7 @@
 
 *{box-sizing:border-box;margin:0;padding:0;}
-html{height:100%;background:#0a0605;}
-body,#root{height:100%;display:flex;align-items:center;justify-content:center;background:#0a0605;}
+html,body{height:100%;overflow:hidden;background:#0a0605;}
+#root{height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#0a0605;}
 button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 :root{--earth:#8b5e3c;--vine:#3a6b35;--grape:#6b2fa0;--wine:#8b1a3a;--gold:#c8953a;--dark:#1a0f0a;--card:rgba(255,255,255,0.62);--sh:0 4px 20px rgba(26,15,10,0.15);}
 body{font-family:'Lato',sans-serif;}
@@ -147,12 +147,12 @@ body{font-family:'Lato',sans-serif;}
 
 // ─────────────────────────────────────────────────────────────────────────────
 /* ── New component styles for refactored structure ── */
-.app { width: min(430px, 100vw); height: 100svh; height: 100dvh; max-height: 932px; background: linear-gradient(160deg,#f9f1e5,#ede0cc,#e0cdb5); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+.app { width: min(430px, 100%); height: 100%; max-height: 932px; flex-shrink: 0; background: linear-gradient(160deg,#f9f1e5,#ede0cc,#e0cdb5); display: flex; flex-direction: column; overflow: hidden; position: relative; }
 @media (min-width: 480px) { .app { border-radius: 28px; box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 24px 80px rgba(0,0,0,0.7); } }
 .hud { background: linear-gradient(135deg,#2a5225,#1d3a1a); padding: 8px 12px; padding-top: max(8px, env(safe-area-inset-top)); display: flex; align-items: center; justify-content: space-between; gap: 6px; box-shadow: 0 3px 16px rgba(0,0,0,0.3); position: sticky; top: 0; z-index: 100; flex-shrink: 0; }
 .hud-stat { display: flex; align-items: center; gap: 3px; background: rgba(255,255,255,0.1); border-radius: 20px; padding: 2px 7px; font-size: 0.62rem; font-weight: 700; color: #f5e6c4; }
 .hud-season { font-size: 1.1rem; }
-.main { flex: 1; overflow: hidden; position: relative; min-height: 0; }
+.main { flex: 1; overflow: hidden; min-height: 0; display: flex; flex-direction: column; }
 .tab-bar { display: flex; background: #130d08; border-top: 2px solid #8b1a3a; position: sticky; bottom: 0; z-index: 100; overflow-x: auto; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom); scrollbar-width: none; }
 .tab-bar::-webkit-scrollbar { display: none; }
 .tab-btn { flex: 1; min-width: 48px; padding: 7px 2px 6px; text-align: center; cursor: pointer; color: rgba(245,230,196,0.36); font-size: 0.5rem; font-weight: 700; text-transform: uppercase; transition: all 0.18s; border: none; background: none; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 52px; justify-content: center; }
@@ -160,7 +160,7 @@ body{font-family:'Lato',sans-serif;}
 .tab-emoji { font-size: 1rem; }
 .tab-label { font-size: 0.5rem; letter-spacing: 0.3px; }
 .notification { position: fixed; top: 58px; left: 50%; transform: translateX(-50%); background: rgba(10,5,5,0.9); border: 1.5px solid; border-radius: 20px; padding: 6px 16px; font-size: 0.78rem; font-weight: 700; z-index: 900; pointer-events: none; backdrop-filter: blur(8px); }
-.screen { position: relative; height: 100%; overflow: hidden; display: flex; flex-direction: column; }
+.screen { position: relative; flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
 /* Background fills the screen but doesn't participate in flex layout */
 .screen > img, .screen > canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; pointer-events: none; }
 /* Scrollable content floats over the pinned background */
@@ -225,6 +225,7 @@ body{font-family:'Lato',sans-serif;}
 .stock-emoji { font-size: 3rem; }
 .stock-count { font-size: 2rem; font-weight: 700; color: #8b1a3a; font-family: 'Playfair Display', serif; }
 .stock-label { font-size: 0.7rem; color: #888; }
+.stock-price { font-size: 0.72rem; font-weight: 700; color: #c8953a; margin-top: 2px; }
 .sell-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
 .sell-btn { padding: 10px 16px; border-radius: 12px; border: none; background: linear-gradient(135deg,#8b1a3a,#b02e4e); color: #fff; font-weight: 700; font-size: 0.78rem; cursor: pointer; }
 .sell-btn.disabled { opacity: 0.35; cursor: not-allowed; background: #ccc; color: #666; }
@@ -243,6 +244,7 @@ body{font-family:'Lato',sans-serif;}
 .variety-cost.affordable { color: #3a6b35; }
 .variety-cost.expensive { color: #8b1a3a; }
 .variety-active-badge { margin-top: 5px; font-size: 0.58rem; font-weight: 700; color: #3a6b35; }
+.variety-price-hint { font-size: 0.58rem; color: #c8953a; font-weight: 700; margin-top: 3px; }
 .season-pass-note { font-size: 0.62rem; color: #888; text-align: center; font-style: italic; padding: 8px; background: rgba(255,255,255,0.4); border-radius: 10px; }
 .blend-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .blend-slot { flex: 1; background: rgba(255,255,255,0.65); border-radius: 12px; padding: 10px; text-align: center; border: 1.5px solid rgba(255,255,255,0.55); }
@@ -355,6 +357,7 @@ body{font-family:'Lato',sans-serif;}
 /* ── Ferment buttons & progress ── */
 .ferm-btn-row { display: grid; grid-template-columns: repeat(2,1fr); gap: 7px; margin-bottom: 12px; }
 .ferm-qty-btn { margin-bottom: 0; padding: 9px 8px; font-size: 0.74rem; }
+.tank-btn { grid-column: span 2; background: linear-gradient(135deg,#3a5a8a,#2a3a6a) !important; border-color: rgba(100,140,200,0.5) !important; }
 .ferm-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
 .ferm-progress-bar { height: 10px; background: rgba(255,255,255,0.15); border-radius: 5px; overflow: hidden; }
 .ferm-progress-fill { height: 100%; background: linear-gradient(90deg,#c8953a,#f0c060); border-radius: 5px; transition: width 0.3s; }
