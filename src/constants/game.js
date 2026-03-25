@@ -27,7 +27,7 @@ export const UPGRADE_DEFS = {
 }
 
 export const STAFF_DEFS = {
-  harvester:{ name:"Vineyard Worker", desc:"Automates 2 / 4 / all vine rows",        emoji:"👨‍🌾", baseCost:500,  costMult:3,   maxLvl:3, vines:[2,4,99]         },
+  harvester:{ name:"Vineyard Worker", desc:"Automates 2 / 4 / 8 vine rows",          emoji:"👨‍🌾", baseCost:500,  costMult:3,   maxLvl:3, vines:[2,4,8]          },
   presser:  { name:"Press Operator",  desc:"Auto-presses 1 / 2 / 5 batches/cycle",   emoji:"⚙️",  baseCost:800,  costMult:3,   maxLvl:3, batches:[1,2,5]        },
   cellarMgr:{ name:"Cellar Manager",  desc:"Auto-ferments 1 / 2 / 3 barrels/cycle",  emoji:"🪣", baseCost:1200, costMult:3,   maxLvl:3, mults:[1,2,3]          },
   sommelier:{ name:"Sommelier",       desc:"Boosts wine sale price",                  emoji:"🥂", baseCost:2000, costMult:3.5, maxLvl:3, mults:[1.2,1.45,1.75]  },

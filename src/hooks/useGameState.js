@@ -360,7 +360,7 @@ function gameTick(s) {
   const hLvl = ns.staff.harvester || 0
   const adHarv = (ns.adWorkers?.harvester || 0) > 0
   if (hLvl > 0 || adHarv) {
-    const vineLimit = hLvl > 0 ? STAFF_DEFS.harvester.vines[hLvl - 1] : 2
+    const vineLimit = hLvl > 0 ? STAFF_DEFS.harvester.vines[hLvl - 1] : ns.vines.length
     let totalHarvested = 0
     ns.vines = ns.vines.map((v, idx) => {
       if (idx >= vineLimit || v.cooldown > 0) return v
@@ -395,7 +395,7 @@ function gameTick(s) {
   const adPress = (ns.adWorkers?.presser || 0) > 0
   if ((pLvl > 0 || adPress) && ns.pressQueue === 0) {
     const grapeCost = Math.max(5, GRAPES_PER_BARREL - gUpgVal(ns.upgrades, 'pressSpeed'))
-    const batchCount = pLvl > 0 ? STAFF_DEFS.presser.batches[pLvl - 1] : 1
+    const batchCount = pLvl > 0 ? STAFF_DEFS.presser.batches[pLvl - 1] : maxBatches
     const maxBatches = Math.floor(inv[ns.activeVariety].grapes / grapeCost)
     const actual = Math.min(batchCount, maxBatches)
     if (actual > 0) {
@@ -424,7 +424,7 @@ function gameTick(s) {
   const cLvl = ns.staff.cellarMgr || 0
   const adCellar = (ns.adWorkers?.cellarMgr || 0) > 0
   if ((cLvl > 0 || adCellar) && ns.fermentQueue === 0 && inv[ns.activeVariety].barrels > 0) {
-    const batchSize = cLvl > 0 ? STAFF_DEFS.cellarMgr.mults[cLvl - 1] : 1
+    const batchSize = cLvl > 0 ? STAFF_DEFS.cellarMgr.mults[cLvl - 1] : inv[ns.activeVariety].barrels
     const batch = Math.min(batchSize, inv[ns.activeVariety].barrels)
     inv[ns.activeVariety] = { ...inv[ns.activeVariety], barrels: inv[ns.activeVariety].barrels - batch }
     ns.fermentQueue = batch
