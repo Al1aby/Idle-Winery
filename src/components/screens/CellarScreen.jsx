@@ -1,14 +1,19 @@
 import { useGameStore } from '@/hooks/useGameState';
 import { fmt, mmss, FERMENT_SECS, GRAPE_VARIETIES, gUpgVal } from '@/constants/game';
 import { CellarBG } from '@/scenes';
+import { UpgradeSection, StaffSection } from '@/components/ShopSections';
 
 export default function CellarScreen() {
   const {
-    upgrades, inventory, activeVariety, unlockedVarieties,
+    money, upgrades, staff, prestigeLvl,
+    inventory, activeVariety, unlockedVarieties,
     fermentQueue, fermentSecs, fermentVariety, adWorkers,
-    fermentBarrels, sellWine, watchAdWorker,
+    fermentBarrels, sellWine, watchAdWorker, buyUpgrade, buyStaff,
   } = useGameStore(s => ({
+    money:             s.money,
     upgrades:          s.upgrades,
+    staff:             s.staff,
+    prestigeLvl:       s.prestigeLvl,
     inventory:         s.inventory,
     activeVariety:     s.activeVariety,
     unlockedVarieties: s.unlockedVarieties,
@@ -19,6 +24,8 @@ export default function CellarScreen() {
     fermentBarrels:    s.fermentBarrels,
     sellWine:          s.sellWine,
     watchAdWorker:     s.watchAdWorker,
+    buyUpgrade:        s.buyUpgrade,
+    buyStaff:          s.buyStaff,
   }));
 
   const inv           = inventory[activeVariety] || { grapes: 0, barrels: 0, wine: 0 };
@@ -125,6 +132,9 @@ export default function CellarScreen() {
             );
           })}
         </div>
+
+        <UpgradeSection keys={['cellarSpeed', 'winePrice']} upgrades={upgrades} money={money} buyUpgrade={buyUpgrade} />
+        <StaffSection keys={['cellarMgr', 'sommelier']} staff={staff} money={money} prestigeLvl={prestigeLvl} buyStaff={buyStaff} />
 
         {/* Per-variety wine inventory */}
         {unlockedVarieties.length > 1 && (

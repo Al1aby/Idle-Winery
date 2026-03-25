@@ -138,6 +138,7 @@ export const useGameStore = create((set, get) => ({
       const variety = GRAPE_VARIETIES.find(v => v.id === varietyId)
       if (!variety || s.unlockedVarieties.includes(varietyId)) return {}
       if (variety.prem && !s.iapOwned.includes('seasonpass')) return {}
+      if ((variety.prestigeReq || 0) > (s.prestigeLvl || 0)) return {}
       if (!variety.prem && s.money < variety.unlockCost) return {}
       const newInv = { ...s.inventory, [varietyId]: s.inventory[varietyId] || mkInv() }
       return {
@@ -237,6 +238,7 @@ export const useGameStore = create((set, get) => ({
   buyStaff(key) {
     set(s => {
       const lvl = s.staff[key] || 0
+      if (lvl + 1 >= 3 && (s.prestigeLvl || 0) < 1) return {}  // lv3 requires prestige
       const cost = stkCost(key, lvl)
       if (s.money < cost) return {}
       SFX.upgrade()
