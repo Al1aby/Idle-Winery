@@ -297,6 +297,28 @@ body{background:#1a0f0a;font-family:'Lato',sans-serif;}
 .btn-primary { padding: 9px 18px; border-radius: 10px; border: none; background: linear-gradient(135deg,#c8953a,#d4a84a); color: #1a0f0a; font-weight: 700; font-size: 0.78rem; cursor: pointer; }
 .btn-secondary { padding: 9px 18px; border-radius: 10px; border: 1.5px solid rgba(245,230,196,0.3); background: transparent; color: rgba(245,230,196,0.7); font-weight: 700; font-size: 0.78rem; cursor: pointer; }
 
+/* ── Per-variety inventory breakdown ── */
+.inv-breakdown { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; background: rgba(255,255,255,0.5); border-radius: 12px; padding: 10px; }
+.inv-row { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 8px; transition: background 0.15s; }
+.inv-row.active { background: rgba(58,107,53,0.15); font-weight: 700; }
+.inv-emoji { font-size: 1rem; width: 22px; text-align: center; }
+.inv-name { flex: 1; font-size: 0.72rem; color: #1a0f0a; }
+.inv-count { font-size: 0.72rem; font-weight: 700; color: #8b5e3c; }
+
+/* ── Buy vine row ── */
+.buy-row-btn { width: 100%; padding: 10px; border-radius: 12px; border: 2px dashed #3a6b35; background: rgba(58,107,53,0.08); color: #3a6b35; font-weight: 700; font-size: 0.76rem; cursor: pointer; margin: 10px 0; transition: background 0.15s; }
+.buy-row-btn:not(.disabled):hover { background: rgba(58,107,53,0.18); }
+.buy-row-btn.disabled { opacity: 0.4; cursor: not-allowed; }
+.buy-row-maxed { text-align: center; font-size: 0.68rem; color: #3a6b35; padding: 8px; background: rgba(58,107,53,0.08); border-radius: 10px; margin: 8px 0; }
+
+/* ── Ad worker row ── */
+.ad-worker-row { margin: 10px 0; }
+.watch-ad-btn { width: 100%; padding: 9px; border-radius: 12px; border: none; background: linear-gradient(135deg,#1a3a6b,#2a5a9e); color: #fff; font-weight: 700; font-size: 0.72rem; cursor: pointer; }
+.ad-worker-active { width: 100%; padding: 9px; border-radius: 12px; background: linear-gradient(135deg,#1a5a3a,#2a9e6b); color: #fff; font-weight: 700; font-size: 0.72rem; text-align: center; }
+
+/* ── Press cooldown fill (distinct colour from ferment) ── */
+.ferm-progress-fill.press-fill { background: linear-gradient(90deg,#5a8b3a,#8ece60); }
+
 /* ── Vine rows (VineyardScreen) ── */
 .vine-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
 .vine-row-card { background: rgba(255,255,255,0.65); border-radius: 14px; padding: 11px 13px; border: 1.5px solid rgba(255,255,255,0.55); box-shadow: 0 2px 10px rgba(0,0,0,0.07); backdrop-filter: blur(6px); }

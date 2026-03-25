@@ -5,6 +5,9 @@
 export const VINE_COOLDOWN    = 15   // seconds per harvest
 export const GRAPES_PER_BARREL = 15  // grapes needed to press 1 barrel
 export const FERMENT_SECS     = 30   // seconds to ferment a batch
+export const PRESS_SECS       = 10   // seconds to press a batch
+export const VINE_ROW_COSTS   = [500, 1500, 4000, 10000, 25000]  // cost of each extra row
+export const AD_WORKER_DURATION = 300  // 5 minutes of ad-powered automation
 
 export const GRAPE_VARIETIES = [
   { id:"chardonnay", name:"Chardonnay", emoji:"🍇", unlockCost:0,    grapeValue:1,  wineMultiplier:1,   prem:false },
