@@ -69,8 +69,8 @@ export const IAP_LIST = [
   { id:"starter",    name:"Starter Pack",  price:"$0.99",    desc:"$200 + 100 Grapes",          money:200,  grapes:100,  once:true },
   { id:"vineyard",   name:"Vineyard Pack", price:"$2.99",    desc:"$1000 + 500 Grapes + Merlot", money:1000, grapes:500,  unlockV:"merlot", once:true },
   { id:"winery",     name:"Winery Bundle", price:"$9.99",    desc:"$5000 + All varieties",       money:5000, grapes:2000, unlockAll:true, once:true },
-  { id:"adfree",     name:"Ad-Free",       price:"$3.99",    desc:"Permanent auto-workers",      flag:"adFree" },
-  { id:"seasonpass", name:"Season Pass",   price:"$2.99/mo", desc:"Premium grapes + bonuses",    flag:"seasonPass" },
+  { id:"adfree",     name:"Ad-Free",        price:"$3.99",    desc:"Permanent auto-workers",                        flag:"adFree" },
+  { id:"repboost",   name:"Fame Boost",    price:"$1.99",    desc:"+300 Fame + $500 — fast-track your first Prestige", money:500, fame:300, once:true },
 ]
 
 export const BLEND_NAMES = ["Estate Cuvée","Grand Reserve","Maison Blend","Prestige Select","Château Special"]

@@ -18,6 +18,7 @@ export default function ShopScreen() {
         money:    s.money + (item.money || 0),
         grapes:   s.grapes + (item.grapes || 0),
         wine:     s.wine + (item.wine || 0),
+        fame:     s.fame + (item.fame || 0),
       };
       if (item.unlockV) next.unlockedVarieties = [...s.unlockedVarieties, item.unlockV];
       if (item.unlockAll) next.unlockedVarieties = ['chardonnay','merlot','riesling','cabernet'];
