@@ -259,16 +259,16 @@ export const useGameStore = create((set, get) => ({
 
   createBlend() {
     set(s => {
-      if (!s.blendA || !s.blendB || s.wine < 2) return {}
+      if (!s.blendA || !s.blendB) return {}
+      const inv = s.inventory[s.activeVariety] || mkInv()
+      if (inv.wine < 2) return {}
       const key1 = `${s.blendA}+${s.blendB}`
       const key2 = `${s.blendB}+${s.blendA}`
       const bonus = BLEND_BONUS[key1] || BLEND_BONUS[key2] || 1.5
       const name = BLEND_NAMES[Math.floor(Math.random() * BLEND_NAMES.length)]
-      const gained = Math.floor((s.wine - 2) * bonus + 2)
-      const newInv = Object.fromEntries(
-        Object.entries(s.inventory).map(([k, v]) => [k, { ...v, wine: 0 }])
-      )
-      newInv[s.activeVariety] = { ...(newInv[s.activeVariety] || mkInv()), wine: gained }
+      // cost 2 cases from active variety, produce floor(2 × bonus) — no pooling
+      const gained = Math.floor(2 * bonus)
+      const newInv = { ...s.inventory, [s.activeVariety]: { ...inv, wine: inv.wine - 2 + gained } }
       return { inventory: newInv, ...inv2totals(newInv), blendResult: { name, bonus } }
     })
   },
