@@ -2,15 +2,6 @@
 
 A mobile idle game built with React + Vite + Zustand.
 
-## Quick Start
-
-```bash
-npm install
-npm run dev
-```
-
-Open http://localhost:3000 — hot reload works instantly.
-
 ---
 
 ## Project Structure
