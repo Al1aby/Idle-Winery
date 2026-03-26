@@ -10,7 +10,7 @@ export default function ExportScreen() {
     startExport: s.startExport,
   }));
 
-  const reputation = Math.floor(fame / 20); // 0-4 stars
+  const reputation = Math.min(5, Math.floor(fame / 20)); // 0-5 stars
 
   return (
     <div className="screen">
